@@ -1,3 +1,4 @@
+// kit is the PlantX Kit CLI entrypoint.
 package main
 
 import (

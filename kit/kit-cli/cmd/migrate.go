@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Migrate creates new database migration files.
 func Migrate(args []string) {
 	if len(args) < 2 || args[0] != "new" {
 		fmt.Fprintln(os.Stderr, "usage: kit migrate new <name>")

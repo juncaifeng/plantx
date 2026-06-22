@@ -9,6 +9,7 @@ import (
 	"github.com/plantx/kit/kit-cli/internal/scaffold"
 )
 
+// New scaffolds a new service.
 func New(args []string) {
 	if len(args) < 2 || args[0] != "service" {
 		fmt.Fprintln(os.Stderr, "usage: kit new service <name> [--ui] [--gateway]")

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 )
 
+// Build builds container images for the current service.
 func Build(args []string) {
 	fs := flag.NewFlagSet("build", flag.ExitOnError)
 	tag := fs.String("tag", "latest", "image tag")

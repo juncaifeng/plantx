@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Generate generates code from proto and sqlc sources.
 func Generate(args []string) {
 	root, err := findProjectRoot()
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package cmd provides the kit CLI subcommands.
 package cmd
 
 import (
@@ -6,6 +7,7 @@ import (
 	"os/exec"
 )
 
+// Dev manages the local development environment.
 func Dev(args []string) {
 	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "usage: kit dev up|down|logs")

@@ -1,3 +1,4 @@
+// Package scaffold provides service scaffolding helpers.
 package scaffold
 
 import (
@@ -186,7 +187,7 @@ type %s struct {
 `, title(name), title(name))
 }
 
-func appStub(name string) string {
+func appStub(_ string) string {
 	return fmt.Sprintf(`package app
 
 import "context"

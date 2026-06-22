@@ -6,6 +6,7 @@ import (
 	"os/exec"
 )
 
+// Test runs the project test suite.
 func Test(args []string) {
 	cmd := exec.Command("go", "test", "./...")
 	cmd.Stdout = os.Stdout
