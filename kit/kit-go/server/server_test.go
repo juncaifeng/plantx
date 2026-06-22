@@ -20,7 +20,7 @@ import (
 
 type testServer struct{}
 
-func (*testServer) Call(_ context.Context, req *Empty) (*Empty, error) {
+func (*testServer) Call(_ context.Context, _ *Empty) (*Empty, error) {
 	return &Empty{}, nil
 }
 

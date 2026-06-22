@@ -23,7 +23,7 @@ type Registry struct {
 }
 
 // Register adds an instance to the static registry.
-func (r *Registry) Register(ctx context.Context, serviceName string, inst discovery.Instance) error {
+func (r *Registry) Register(_ context.Context, serviceName string, inst discovery.Instance) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.instances[serviceName] = append(r.instances[serviceName], inst)
@@ -31,7 +31,7 @@ func (r *Registry) Register(ctx context.Context, serviceName string, inst discov
 }
 
 // Deregister removes an instance from the static registry by ID.
-func (r *Registry) Deregister(ctx context.Context, serviceName string, instID string) error {
+func (r *Registry) Deregister(_ context.Context, serviceName string, instID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var filtered []discovery.Instance
@@ -45,7 +45,7 @@ func (r *Registry) Deregister(ctx context.Context, serviceName string, instID st
 }
 
 // Discover returns all registered instances for a service.
-func (r *Registry) Discover(ctx context.Context, serviceName string) ([]discovery.Instance, error) {
+func (r *Registry) Discover(_ context.Context, serviceName string) ([]discovery.Instance, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.instances[serviceName], nil

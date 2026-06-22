@@ -1,3 +1,4 @@
+// Package event defines the domain event bus abstraction used by Kit services.
 package event
 
 import "context"

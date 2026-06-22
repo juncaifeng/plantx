@@ -1,3 +1,4 @@
+// Package authz defines the authorization policy decision abstraction.
 package authz
 
 import (

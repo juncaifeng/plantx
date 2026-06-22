@@ -55,7 +55,7 @@ func DenyAll() authz.Authorizer {
 type TenantResolver struct{}
 
 // Resolve extracts tenant information from the provided claims.
-func (TenantResolver) Resolve(userID string, claims map[string]string) (tenant.Info, error) {
+func (TenantResolver) Resolve(_ string, claims map[string]string) (tenant.Info, error) {
 	if claims == nil {
 		return tenant.Info{}, nil
 	}

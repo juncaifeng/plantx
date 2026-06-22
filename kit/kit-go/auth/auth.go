@@ -1,3 +1,4 @@
+// Package auth defines the authentication abstraction and user identity model.
 package auth
 
 import "context"
