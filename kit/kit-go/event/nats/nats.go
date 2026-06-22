@@ -147,6 +147,8 @@ func NewInMemory() *InMemory {
 	return &InMemory{handlers: make(map[string][]event.Handler)}
 }
 
+// Publish records the event locally and dispatches it to matching in-memory
+// subscribers asynchronously.
 func (m *InMemory) Publish(ctx context.Context, e event.Event) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -170,11 +172,12 @@ func (m *InMemory) Publish(ctx context.Context, e event.Event) error {
 		"meta":    meta,
 	})
 	for _, h := range m.handlers[e.EventName()] {
-		go h(ctx, payload, meta)
+		go func() { _ = h(ctx, payload, meta) }()
 	}
 	return nil
 }
 
+// Subscribe registers an in-memory handler for the given subject.
 func (m *InMemory) Subscribe(subject string, h event.Handler) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -182,4 +185,5 @@ func (m *InMemory) Subscribe(subject string, h event.Handler) error {
 	return nil
 }
 
+// Close is a no-op for the in-memory bus.
 func (m *InMemory) Close() error { return nil }
