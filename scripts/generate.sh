@@ -19,6 +19,12 @@ mv plantx/kit/context.pb.go kit/kit-go/proto/context/ 2>/dev/null || true
 mv plantx/kit/event.pb.go kit/kit-go/proto/event/ 2>/dev/null || true
 rmdir -p plantx/kit 2>/dev/null || true
 
+echo "==> Ensuring sqlc output directories exist"
+mkdir -p \
+  services/order/internal/infra/sqlc \
+  platform/registry-service/internal/infra/sqlc \
+  platform/iam-service/internal/infra/sqlc
+
 echo "==> Generating sqlc code"
 sqlc generate
 

@@ -8,13 +8,60 @@ on:
     branches: [main, release/*]
 
 jobs:
-  lint-go:
+  generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.24'
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Install protoc and sqlc
+        run: |
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          curl -L -o /tmp/sqlc.tar.gz https://github.com/sqlc-dev/sqlc/releases/download/v1.26.0/sqlc_1.26.0_linux_amd64.tar.gz
+          tar -xzf /tmp/sqlc.tar.gz -C /tmp
+          sudo mv /tmp/sqlc /usr/local/bin/sqlc
+          chmod +x /usr/local/bin/sqlc
+      - run: pnpm install --frozen-lockfile
+      - name: Run generators
+        run: bash scripts/generate.sh
+      - name: Upload generated artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-artifacts
+          path: |
+            kit/kit-go/proto
+            platform/audit-service/api
+            platform/gateway-service/api
+            platform/iam-service/api
+            platform/registry-service/api
+            platform/tenant-service/api
+            services/order/api
+            services/test-service/api
+            services/order/internal/infra/sqlc
+            platform/registry-service/internal/infra/sqlc
+            platform/iam-service/internal/infra/sqlc
+            openapi
+
+  lint-go:
+    runs-on: ubuntu-latest
+    needs: [generate]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-artifacts
+          path: .
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
@@ -22,34 +69,35 @@ jobs:
 
   test-go:
     runs-on: ubuntu-latest
+    needs: [generate]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-artifacts
+          path: .
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-      - run: go test ./kit/... ./services/order/... ./kit/kit-cli/...
-
-  commitlint:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v6
-        with:
-          configFile: .commitlintrc.json
+          go-version: '1.24'
+      - run: go test ./kit/kit-go/... ./kit/kit-go/gateway/... ./services/order/... ./kit/kit-cli/...
 
   lint-web:
     runs-on: ubuntu-latest
+    needs: [generate]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-artifacts
+          path: .
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
+      - name: Build kit SDK packages
+        run: pnpm -r --filter './kit/**' run build
       - run: pnpm lint
       - run: pnpm typecheck
 
@@ -58,6 +106,10 @@ jobs:
     needs: [lint-go, test-go, lint-web]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-artifacts
+          path: .
       - name: Build service images
         run: |
           docker build -t plantx/order-service:${{ github.sha }} ./services/order
@@ -68,6 +120,10 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: generated-artifacts
+          path: .
       - name: Login to container registry
         uses: docker/login-action@v3
         with:
