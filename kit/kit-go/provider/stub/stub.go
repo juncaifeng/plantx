@@ -16,6 +16,7 @@ type Authenticator struct {
 	Tokens map[string]*auth.UserInfo
 }
 
+// Authenticate validates the credential against the configured static tokens.
 func (a *Authenticator) Authenticate(ctx context.Context, credential string) (*auth.UserInfo, error) {
 	if a == nil || a.Tokens == nil {
 		return nil, errors.New("no tokens configured")
@@ -32,6 +33,7 @@ type Authorizer struct {
 	AllowFunc func(ctx context.Context, req authz.Request) bool
 }
 
+// Authorize evaluates the request using the configured AllowFunc predicate.
 func (a *Authorizer) Authorize(ctx context.Context, req authz.Request) (authz.Decision, error) {
 	if a != nil && a.AllowFunc != nil && a.AllowFunc(ctx, req) {
 		return authz.Decision{Allowed: true}, nil
@@ -52,6 +54,7 @@ func DenyAll() authz.Authorizer {
 // TenantResolver resolves tenant from the tenant_id claim.
 type TenantResolver struct{}
 
+// Resolve extracts tenant information from the provided claims.
 func (TenantResolver) Resolve(userID string, claims map[string]string) (tenant.Info, error) {
 	if claims == nil {
 		return tenant.Info{}, nil
