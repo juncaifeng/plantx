@@ -83,7 +83,7 @@ func (a *Authorizer) Authorize(ctx context.Context, req authz.Request) (authz.De
 	if err != nil {
 		return authz.Decision{}, fmt.Errorf("opa request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return authz.Decision{}, fmt.Errorf("opa returned %d", resp.StatusCode)
 	}

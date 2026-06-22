@@ -181,7 +181,7 @@ func (a *Authenticator) refreshKeys() error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	var j jwks
 	if err := json.NewDecoder(resp.Body).Decode(&j); err != nil {
 		return err
