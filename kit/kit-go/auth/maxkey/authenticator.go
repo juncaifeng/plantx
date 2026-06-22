@@ -46,7 +46,7 @@ func New(opts Options) *Authenticator {
 }
 
 // Authenticate validates a bearer token and returns user info.
-func (a *Authenticator) Authenticate(ctx context.Context, credential string) (*auth.UserInfo, error) {
+func (a *Authenticator) Authenticate(_ context.Context, credential string) (*auth.UserInfo, error) {
 	token := strings.TrimPrefix(credential, "Bearer ")
 	if token == "" {
 		return nil, fmt.Errorf("missing bearer token")
@@ -237,6 +237,6 @@ func EnvOptions(prefix string) Options {
 		Issuer:       os.Getenv(prefix + "_ISSUER"),
 		JWKSURL:      os.Getenv(prefix + "_JWKS_URL"),
 		PublicKeyPEM: os.Getenv(prefix + "_PUBLIC_KEY_PEM"),
-		SkipVerify:   os.Getenv(prefix + "_SKIP_VERIFY") == "true",
+		SkipVerify:   os.Getenv(prefix+"_SKIP_VERIFY") == "true",
 	}
 }

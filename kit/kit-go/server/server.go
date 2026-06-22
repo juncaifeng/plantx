@@ -1,3 +1,4 @@
+// Package server provides the core Kit gRPC/HTTP server implementation.
 package server
 
 import (
@@ -11,13 +12,13 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/plantx/kit/kit-go/auth"
 	"github.com/plantx/kit/kit-go/authz"
-	authzpb "github.com/plantx/kit/kit-go/proto/authz"
 	"github.com/plantx/kit/kit-go/config"
 	kitctx "github.com/plantx/kit/kit-go/context"
 	"github.com/plantx/kit/kit-go/db"
 	"github.com/plantx/kit/kit-go/errors"
 	"github.com/plantx/kit/kit-go/event"
 	"github.com/plantx/kit/kit-go/log"
+	authzpb "github.com/plantx/kit/kit-go/proto/authz"
 	"github.com/plantx/kit/kit-go/telemetry"
 	"github.com/plantx/kit/kit-go/tenant"
 	"github.com/prometheus/client_golang/prometheus"
@@ -53,11 +54,13 @@ type GatewayRegistrar interface {
 	Deregister(ctx context.Context) error
 }
 
+// TracingOptions toggles OpenTelemetry tracing for the server.
 type TracingOptions struct {
 	Enabled     bool
 	ServiceName string
 }
 
+// Options configures a Kit server.
 type Options struct {
 	ServiceName         string
 	GRPCPort            int
@@ -75,6 +78,7 @@ type Options struct {
 	AuthExcludedMethods []string
 }
 
+// Server hosts gRPC and HTTP endpoints along with gateway registration.
 type Server struct {
 	opts        Options
 	grpc        *grpc.Server
@@ -82,6 +86,7 @@ type Server struct {
 	gatewayConn *grpc.ClientConn
 }
 
+// New creates a Kit server with the provided options.
 func New(opts Options) *Server {
 	if opts.Logger == nil {
 		opts.Logger = log.FromContext(context.Background())
@@ -104,7 +109,7 @@ func New(opts Options) *Server {
 	}
 	s := &Server{opts: opts, grpc: grpc.NewServer(grpcOpts...)}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"healthy"}`))
@@ -126,8 +131,10 @@ func New(opts Options) *Server {
 	return s
 }
 
+// GRPC returns the underlying gRPC server.
 func (s *Server) GRPC() *grpc.Server { return s.grpc }
 
+// RegisterGateway wires the grpc-gateway reverse proxy into the HTTP server.
 func (s *Server) RegisterGateway(ctx context.Context, register func(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error) error {
 	gwMux := runtime.NewServeMux(
 		runtime.WithMetadata(func(ctx context.Context, r *http.Request) metadata.MD {
@@ -182,6 +189,7 @@ func (s *Server) RegisterGateway(ctx context.Context, register func(ctx context.
 	return nil
 }
 
+// Run starts the gRPC and HTTP servers and blocks until context cancellation.
 func (s *Server) Run(ctx context.Context) error {
 	addr := fmt.Sprintf(":%d", s.opts.GRPCPort)
 	lis, err := net.Listen("tcp", addr)
@@ -215,6 +223,7 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 }
 
+// Shutdown gracefully stops the server and deregisters from the gateway.
 func (s *Server) Shutdown(ctx context.Context) error {
 	if s.opts.GatewayRegistrar != nil {
 		if err := s.opts.GatewayRegistrar.Deregister(ctx); err != nil {
@@ -241,7 +250,7 @@ func recoveryInterceptor(l log.Logger) grpc.UnaryServerInterceptor {
 }
 
 func traceInterceptor() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			if tp := md.Get("traceparent"); len(tp) > 0 {
 				parts := strings.Split(tp[0], "-")
@@ -373,7 +382,7 @@ func authInterceptor(a auth.Authenticator, excludedMethods []string, l log.Logge
 }
 
 func tenantInterceptor(r tenant.Resolver) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		if r == nil {
 			return handler(ctx, req)
 		}

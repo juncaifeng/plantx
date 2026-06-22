@@ -1,3 +1,4 @@
+// Package config defines the configuration loader abstraction used by Kit services.
 package config
 
 // Loader loads configuration values from a source.

@@ -15,7 +15,7 @@ import (
 
 // InitTracerProvider configures a global tracer provider. If no OTLP endpoint is
 // configured it falls back to a stdout exporter for local development.
-func InitTracerProvider(ctx context.Context, serviceName string) (*sdktrace.TracerProvider, error) {
+func InitTracerProvider(_ context.Context, serviceName string) (*sdktrace.TracerProvider, error) {
 	if ep := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); ep != "" {
 		// OTLP exporter can be added here when the dependency is desired.
 		// For now fall back to stdout so that the trace pipeline is wired.

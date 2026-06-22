@@ -1,3 +1,4 @@
+// Package discovery defines service discovery abstractions.
 package discovery
 
 import "context"

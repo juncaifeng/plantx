@@ -1,3 +1,4 @@
+// Package log provides a structured logging abstraction for Kit services.
 package log
 
 import "context"
@@ -45,4 +46,4 @@ func (nopLogger) Debug(string, ...Field) {}
 func (nopLogger) Info(string, ...Field)  {}
 func (nopLogger) Warn(string, ...Field)  {}
 func (nopLogger) Error(string, ...Field) {}
-func (n nopLogger) With(...Field) Logger  { return n }
+func (n nopLogger) With(...Field) Logger { return n }

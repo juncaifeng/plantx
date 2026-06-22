@@ -34,7 +34,7 @@ type Option func(zap.Config) zap.Config
 
 // WithDevelopment switches to development config.
 func WithDevelopment() Option {
-	return func(c zap.Config) zap.Config {
+	return func(_ zap.Config) zap.Config {
 		return zap.NewDevelopmentConfig()
 	}
 }

@@ -14,8 +14,8 @@ import (
 
 // Options configures the OPA authorizer.
 type Options struct {
-	URL      string
-	Policy   string
+	URL    string
+	Policy string
 	// DecisionPath is the OPA decision path, e.g. "/v1/data/plantx/authz/allow".
 	DecisionPath string
 }
@@ -108,7 +108,7 @@ func hasPermission(perms []string, action authz.Action) bool {
 	return false
 }
 
-func hasRole(roles []string, action authz.Action) bool {
+func hasRole(roles []string, _ authz.Action) bool {
 	// Simple RBAC: admin role grants everything.
 	for _, r := range roles {
 		if r == "admin" || r == "platform_admin" {

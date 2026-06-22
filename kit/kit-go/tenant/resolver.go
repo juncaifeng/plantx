@@ -1,3 +1,4 @@
+// Package tenant provides tenant resolution abstractions and implementations.
 package tenant
 
 // FromUser resolves tenant info from user claims.
@@ -9,7 +10,7 @@ func NewResolver() *FromUser {
 }
 
 // Resolve extracts tenant info from the user ID and claims.
-func (r *FromUser) Resolve(userID string, claims map[string]string) (Info, error) {
+func (r *FromUser) Resolve(_ string, claims map[string]string) (Info, error) {
 	tenantID := claims["tenant_id"]
 	if tenantID == "" {
 		tenantID = claims["org_id"]
