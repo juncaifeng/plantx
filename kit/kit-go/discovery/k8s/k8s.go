@@ -34,14 +34,17 @@ type Registry struct {
 	opts Options
 }
 
+// Register is a no-op for the K8s DNS registry.
 func (r *Registry) Register(ctx context.Context, serviceName string, inst discovery.Instance) error {
 	return nil
 }
 
+// Deregister is a no-op for the K8s DNS registry.
 func (r *Registry) Deregister(ctx context.Context, serviceName string, instID string) error {
 	return nil
 }
 
+// Discover resolves service instances via Kubernetes DNS.
 func (r *Registry) Discover(ctx context.Context, serviceName string) ([]discovery.Instance, error) {
 	// Headless service DNS: <service>.<namespace>.svc.cluster.local
 	host := fmt.Sprintf("%s.%s.svc.cluster.local", serviceName, r.opts.Namespace)
@@ -72,6 +75,7 @@ func (r *Registry) Discover(ctx context.Context, serviceName string) ([]discover
 	return instances, nil
 }
 
+// Close is a no-op for the K8s DNS registry.
 func (r *Registry) Close() error { return nil }
 
 // Atoi parses a port string.
