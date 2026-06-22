@@ -12,6 +12,7 @@ import (
 	"github.com/plantx/kit/kit-go/tenant"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
@@ -19,7 +20,7 @@ import (
 
 type testServer struct{}
 
-func (*testServer) Call(ctx context.Context, req *Empty) (*Empty, error) {
+func (*testServer) Call(_ context.Context, req *Empty) (*Empty, error) {
 	return &Empty{}, nil
 }
 
@@ -36,10 +37,10 @@ type TestServiceServer interface {
 }
 
 func RegisterTestServiceServer(s *grpc.Server, srv TestServiceServer) {
-	s.RegisterService(&TestService_ServiceDesc, srv)
+	s.RegisterService(&TestServiceServiceDesc, srv)
 }
 
-var TestService_ServiceDesc = grpc.ServiceDesc{
+var TestServiceServiceDesc = grpc.ServiceDesc{
 	ServiceName: "TestService",
 	HandlerType: (*TestServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -83,14 +84,14 @@ func startTestServer(t *testing.T, opts Options) (*grpc.ClientConn, func()) {
 		}
 	}()
 
-	conn, err := grpc.DialContext(context.Background(), "bufnet",
+	conn, err := grpc.NewClient("passthrough:///bufnet",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) { return lis.Dial() }),
-		grpc.WithInsecure())
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
 	return conn, func() {
-		conn.Close()
+		_ = conn.Close()
 		srv.GRPC().Stop()
 	}
 }
@@ -152,13 +153,13 @@ func TestTenantContextPropagated(t *testing.T) {
 
 	lis := bufconn.Listen(1024 * 1024)
 	go func() { _ = srv.GRPC().Serve(lis) }()
-	conn, err := grpc.DialContext(context.Background(), "bufnet",
+	conn, err := grpc.NewClient("passthrough:///bufnet",
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) { return lis.Dial() }),
-		grpc.WithInsecure())
+		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	defer srv.GRPC().Stop()
 
 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("authorization", "ok"))
@@ -176,7 +177,7 @@ type tenantCapturingServer struct {
 	captured *string
 }
 
-func (s *tenantCapturingServer) Call(ctx context.Context, req *Empty) (*Empty, error) {
+func (s *tenantCapturingServer) Call(ctx context.Context, _ *Empty) (*Empty, error) {
 	*s.captured = kitctx.GetTenant(ctx).ID
 	return &Empty{}, nil
 }
