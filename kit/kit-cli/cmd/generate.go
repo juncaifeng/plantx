@@ -11,7 +11,7 @@ import (
 )
 
 // Generate generates code from proto and sqlc sources.
-func Generate(args []string) {
+func Generate(_ []string) {
 	root, err := findProjectRoot()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "generate failed: %v\n", err)

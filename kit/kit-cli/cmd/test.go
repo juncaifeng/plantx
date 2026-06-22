@@ -7,7 +7,7 @@ import (
 )
 
 // Test runs the project test suite.
-func Test(args []string) {
+func Test(_ []string) {
 	cmd := exec.Command("go", "test", "./...")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

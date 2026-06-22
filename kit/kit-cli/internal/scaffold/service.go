@@ -47,14 +47,14 @@ func Service(name string, opts ServiceOptions) error {
 	}
 
 	files := map[string]string{
-		filepath.Join(serviceDir, "go.mod"):                                        serviceGoMod(name),
-		filepath.Join(serviceDir, "api", name+".proto"):                            serviceProto(name),
-		filepath.Join(serviceDir, "sqlc.yaml"):                                     sqlcYaml(),
-		filepath.Join(serviceDir, "internal", "domain", name+".go"):                domainStub(name),
-		filepath.Join(serviceDir, "internal", "app", "service.go"):                 appStub(name),
-		filepath.Join(serviceDir, "internal", "interfaces", "grpc", "handler.go"):  handlerStub(name),
-		filepath.Join(serviceDir, "cmd", "main.go"):                                mainStub(name),
-		filepath.Join(serviceDir, "Dockerfile"):                                    dockerfileStub(name),
+		filepath.Join(serviceDir, "go.mod"):                                       serviceGoMod(name),
+		filepath.Join(serviceDir, "api", name+".proto"):                           serviceProto(name),
+		filepath.Join(serviceDir, "sqlc.yaml"):                                    sqlcYaml(),
+		filepath.Join(serviceDir, "internal", "domain", name+".go"):               domainStub(name),
+		filepath.Join(serviceDir, "internal", "app", "service.go"):                appStub(name),
+		filepath.Join(serviceDir, "internal", "interfaces", "grpc", "handler.go"): handlerStub(name),
+		filepath.Join(serviceDir, "cmd", "main.go"):                               mainStub(name),
+		filepath.Join(serviceDir, "Dockerfile"):                                   dockerfileStub(name),
 	}
 
 	for path, content := range files {
@@ -188,7 +188,7 @@ type %s struct {
 }
 
 func appStub(_ string) string {
-	return fmt.Sprintf(`package app
+	return `package app
 
 import "context"
 
@@ -201,7 +201,7 @@ func New() *Service {
 func (s *Service) Ping(ctx context.Context, msg string) string {
 	return msg
 }
-`)
+`
 }
 
 func handlerStub(name string) string {
