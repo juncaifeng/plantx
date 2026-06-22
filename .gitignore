@@ -39,7 +39,7 @@ Thumbs.db
 **/*.pb.go
 **/*.pb.gw.go
 **/*.pb.ts
-**/sqlc/
+**/sqlc/*.go
 
 # OpenSpec
 .openspec/
