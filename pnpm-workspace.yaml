@@ -1,0 +1,7 @@
+packages:
+  - "kit/kit-ui"
+  - "kit/kit-sdk-api"
+  - "kit/kit-sdk-kit"
+  - "apps/portal"
+  - "services/*/web/*"
+  - "platform/*/web/*"

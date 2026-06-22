@@ -1,0 +1,16 @@
+go 1.24.2
+
+use (
+	./deployments/docker-compose/mock-auth
+	./kit/kit-cli
+	./kit/kit-go
+	./kit/kit-go/gateway
+	./platform/audit-service
+	./platform/gateway-service
+	./platform/iam-service
+	./platform/notification-service
+	./platform/registry-service
+	./platform/tenant-service
+	./services/order
+	./services/test-service
+)

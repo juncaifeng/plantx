@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package plantx.kit.authz;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/plantx/kit/kit-go/proto/authz;authzpb";
+
+extend google.protobuf.MethodOptions {
+  Action action = 90001;
+}
+
+message Action {
+  string service = 1;
+  string resource = 2;
+  string operation = 3;
+}

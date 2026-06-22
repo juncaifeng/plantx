@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "plantx.fullname" . }}-order
+  labels:
+    {{- include "plantx.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.orderService.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "plantx.name" . }}-order
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "plantx.name" . }}-order
+        {{- include "plantx.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: order
+          image: "{{ .Values.orderService.image.repository }}:{{ .Values.orderService.image.tag }}"
+          imagePullPolicy: {{ .Values.orderService.image.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.orderService.service.grpcPort }}
+            - name: http
+              containerPort: {{ .Values.orderService.service.httpPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "plantx.fullname" . }}-order-config
+            - secretRef:
+                name: {{ include "plantx.fullname" . }}-order-secrets
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.orderService.resources | nindent 12 }}

@@ -1,0 +1,22 @@
+{
+  "name": "@plantx/test-sdk-api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'test-sdk-api lint ok'",
+    "generate": "echo 'Run kit generate from repo root to regenerate from proto'"
+  },
+  "dependencies": {
+    "@plantx/kit-sdk-api": "workspace:*",
+    "@protobuf-ts/runtime": "^2.11.1",
+    "@protobuf-ts/runtime-rpc": "^2.11.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package plantx.kit.context;
+
+option go_package = "github.com/plantx/kit/kit-go/proto/context;contextpb";
+
+message UserInfo {
+  string id = 1;
+  string tenant_id = 2;
+  string username = 3;
+  string display_name = 4;
+  string email = 5;
+  repeated string roles = 6;
+  repeated string permissions = 7;
+}
+
+message TenantInfo {
+  string id = 1;
+  string name = 2;
+}
+
+message TraceInfo {
+  string trace_id = 1;
+  string span_id = 2;
+}
+
+message RequestContext {
+  UserInfo user = 1;
+  TenantInfo tenant = 2;
+  TraceInfo trace = 3;
+}

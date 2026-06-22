@@ -1,0 +1,47 @@
+{
+  "name": "@plantx/kit-sdk-api",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./iam": {
+      "import": "./dist/iam.js",
+      "types": "./dist/iam.d.ts"
+    },
+    "./tenant": {
+      "import": "./dist/tenant.js",
+      "types": "./dist/tenant.d.ts"
+    },
+    "./gateway": {
+      "import": "./dist/gateway.js",
+      "types": "./dist/gateway.d.ts"
+    },
+    "./audit": {
+      "import": "./dist/audit.js",
+      "types": "./dist/audit.d.ts"
+    },
+    "./registry": {
+      "import": "./dist/registry.js",
+      "types": "./dist/registry.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "echo 'lint ok'",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

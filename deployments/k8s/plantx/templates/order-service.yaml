@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "plantx.name" . }}-order-service
+  labels:
+    {{- include "plantx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: order-service
+spec:
+  replicas: {{ .Values.orderService.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "plantx.name" . }}-order-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "plantx.name" . }}-order-service
+    spec:
+      containers:
+        - name: order-service
+          image: "{{ .Values.orderService.image }}:{{ .Values.global.imageTag }}"
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.orderService.grpcPort }}
+            - name: http
+              containerPort: {{ .Values.orderService.httpPort }}
+          env:
+            - name: GRPC_PORT
+              value: "{{ .Values.orderService.grpcPort }}"
+            - name: HTTP_PORT
+              value: "{{ .Values.orderService.httpPort }}"
+            - name: DATABASE_DSN
+              value: "{{ .Values.orderService.databaseDSN }}"
+            - name: NATS_URL
+              value: "{{ .Values.orderService.natsURL }}"
+            - name: MAXKEY_ISSUER
+              value: "{{ .Values.orderService.maxkeyIssuer }}"
+            - name: MAXKEY_JWKS_URL
+              value: "{{ .Values.orderService.maxkeyJWKSURL }}"
+            - name: OPA_URL
+              value: "{{ .Values.orderService.opaURL }}"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "plantx.name" . }}-order-service
+  labels:
+    {{- include "plantx.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "plantx.name" . }}-order-service
+  ports:
+    - name: grpc
+      port: {{ .Values.orderService.grpcPort }}
+      targetPort: grpc
+    - name: http
+      port: {{ .Values.orderService.httpPort }}
+      targetPort: http

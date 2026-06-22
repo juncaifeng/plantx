@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package plantx.test.v1;
+
+option go_package = "github.com/plantx/services/test-service/api";
+
+import "google/api/annotations.proto";
+import "plantx/kit/authz.proto";
+
+service TestService {
+  rpc Ping(PingRequest) returns (PongResponse) {
+    option (google.api.http) = {
+      get: "/api/test/v1/ping"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "test"
+      resource: "test"
+      operation: "execute"
+    };
+  }
+
+  rpc Echo(EchoRequest) returns (EchoResponse) {
+    option (google.api.http) = {
+      post: "/api/test/v1/echo"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "test"
+      resource: "test"
+      operation: "create"
+    };
+  }
+}
+
+message PingRequest {}
+
+message PongResponse {
+  string message = 1;
+}
+
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoResponse {
+  string message = 1;
+  string user_id = 2;
+  string tenant_id = 3;
+}

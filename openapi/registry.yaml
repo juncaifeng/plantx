@@ -1,0 +1,844 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: RegistryService API
+    version: 0.0.1
+paths:
+    /api/registry/v1/applications:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_ListApplications
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ApplicationList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - RegistryService
+            operationId: RegistryService_RegisterApplication
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RegisterApplicationRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Application'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/applications/{applicationId}/menus:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_GetApplicationMenus
+            parameters:
+                - name: applicationId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MenuList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/applications/{applicationId}/micro-apps:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_GetApplicationMicroApps
+            parameters:
+                - name: applicationId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MicroAppList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/applications/{id}:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_GetApplication
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Application'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        put:
+            tags:
+                - RegistryService
+            operationId: RegistryService_UpdateApplication
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateApplicationRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Application'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - RegistryService
+            operationId: RegistryService_DeleteApplication
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/menus:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_ListMenus
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MenuList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - RegistryService
+            operationId: RegistryService_CreateMenu
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateMenuRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Menu'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/menus/reorder:
+        post:
+            tags:
+                - RegistryService
+            operationId: RegistryService_ReorderMenus
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ReorderMenusRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MenuList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/menus/{id}:
+        put:
+            tags:
+                - RegistryService
+            operationId: RegistryService_UpdateMenu
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateMenuRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Menu'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - RegistryService
+            operationId: RegistryService_DeleteMenu
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/micro-apps:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_ListMicroApps
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MicroAppList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - RegistryService
+            operationId: RegistryService_RegisterMicroApp
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RegisterMicroAppRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MicroApp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/micro-apps/{name}:
+        put:
+            tags:
+                - RegistryService
+            operationId: RegistryService_UpdateMicroApp
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateMicroAppRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MicroApp'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - RegistryService
+            operationId: RegistryService_DeleteMicroApp
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/services:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_ListServices
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ServiceList'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - RegistryService
+            operationId: RegistryService_RegisterService
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RegisterServiceRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Service'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/services/{id}:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_GetService
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Service'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - RegistryService
+            operationId: RegistryService_DeregisterService
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/services/{serviceId}/route-policy:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_GetRoutePolicy
+            parameters:
+                - name: serviceId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RoutePolicy'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        put:
+            tags:
+                - RegistryService
+            operationId: RegistryService_SetRoutePolicy
+            parameters:
+                - name: serviceId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SetRoutePolicyRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RoutePolicy'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/registry/v1/sync-routes:
+        get:
+            tags:
+                - RegistryService
+            operationId: RegistryService_SyncRoutes
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SyncRoutesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+components:
+    schemas:
+        Application:
+            type: object
+            properties:
+                id:
+                    type: string
+                key:
+                    type: string
+                name:
+                    type: string
+                labelKey:
+                    type: string
+                icon:
+                    type: string
+                description:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                sortOrder:
+                    type: integer
+                    format: int32
+        ApplicationList:
+            type: object
+            properties:
+                applications:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Application'
+        CreateMenuRequest:
+            type: object
+            properties:
+                labelKey:
+                    type: string
+                route:
+                    type: string
+                icon:
+                    type: string
+                parentId:
+                    type: string
+                sortOrder:
+                    type: integer
+                    format: int32
+                microAppName:
+                    type: string
+                requirePermission:
+                    type: string
+                applicationId:
+                    type: string
+                applicationKey:
+                    type: string
+        GoogleProtobufAny:
+            type: object
+            properties:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        Menu:
+            type: object
+            properties:
+                id:
+                    type: string
+                labelKey:
+                    type: string
+                route:
+                    type: string
+                icon:
+                    type: string
+                parentId:
+                    type: string
+                sortOrder:
+                    type: integer
+                    format: int32
+                microAppName:
+                    type: string
+                requirePermission:
+                    type: string
+                applicationId:
+                    type: string
+                applicationKey:
+                    type: string
+        MenuList:
+            type: object
+            properties:
+                menus:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Menu'
+        MicroApp:
+            type: object
+            properties:
+                name:
+                    type: string
+                route:
+                    type: string
+                bundleUrl:
+                    type: string
+                menuLabelKey:
+                    type: string
+                requirePermission:
+                    type: string
+        MicroAppList:
+            type: object
+            properties:
+                microApps:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MicroApp'
+        RegisterApplicationRequest:
+            type: object
+            properties:
+                key:
+                    type: string
+                name:
+                    type: string
+                labelKey:
+                    type: string
+                icon:
+                    type: string
+                description:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                sortOrder:
+                    type: integer
+                    format: int32
+        RegisterMicroAppRequest:
+            type: object
+            properties:
+                serviceName:
+                    type: string
+                microApp:
+                    $ref: '#/components/schemas/MicroApp'
+        RegisterServiceRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                grpcHost:
+                    type: string
+                restPrefix:
+                    type: string
+        ReorderMenusRequest:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ReorderMenusRequest_Item'
+        ReorderMenusRequest_Item:
+            type: object
+            properties:
+                id:
+                    type: string
+                sortOrder:
+                    type: integer
+                    format: int32
+        Route:
+            type: object
+            properties:
+                path:
+                    type: string
+                method:
+                    type: string
+        RoutePolicy:
+            type: object
+            properties:
+                rateLimitRps:
+                    type: integer
+                    format: int32
+                authRequired:
+                    type: boolean
+                canaryWeight:
+                    type: integer
+                    format: int32
+                canaryHost:
+                    type: string
+        Service:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                grpcHost:
+                    type: string
+                restPrefix:
+                    type: string
+                routes:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Route'
+                microApp:
+                    $ref: '#/components/schemas/MicroApp'
+        ServiceList:
+            type: object
+            properties:
+                services:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Service'
+        ServiceRoute:
+            type: object
+            properties:
+                serviceId:
+                    type: string
+                name:
+                    type: string
+                restPrefix:
+                    type: string
+                upstreamHost:
+                    type: string
+                routes:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Route'
+                policy:
+                    $ref: '#/components/schemas/RoutePolicy'
+        SetRoutePolicyRequest:
+            type: object
+            properties:
+                serviceId:
+                    type: string
+                policy:
+                    $ref: '#/components/schemas/RoutePolicy'
+        Status:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
+                message:
+                    type: string
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        SyncRoutesResponse:
+            type: object
+            properties:
+                routes:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ServiceRoute'
+        UpdateApplicationRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                key:
+                    type: string
+                name:
+                    type: string
+                labelKey:
+                    type: string
+                icon:
+                    type: string
+                description:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                sortOrder:
+                    type: integer
+                    format: int32
+        UpdateMenuRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                labelKey:
+                    type: string
+                route:
+                    type: string
+                icon:
+                    type: string
+                parentId:
+                    type: string
+                sortOrder:
+                    type: integer
+                    format: int32
+                microAppName:
+                    type: string
+                requirePermission:
+                    type: string
+                applicationId:
+                    type: string
+                applicationKey:
+                    type: string
+        UpdateMicroAppRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                route:
+                    type: string
+                bundleUrl:
+                    type: string
+                menuLabelKey:
+                    type: string
+                requirePermission:
+                    type: string
+tags:
+    - name: RegistryService

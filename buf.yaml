@@ -1,0 +1,15 @@
+version: v1beta1
+name: buf.build/plantx/kit
+breaking:
+  use:
+    - FILE
+deps:
+  - buf.build/googleapis/googleapis
+build:
+  roots:
+    - proto
+    - platform
+    - services
+lint:
+  use:
+    - DEFAULT

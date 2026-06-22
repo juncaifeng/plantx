@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package plantx.audit.v1;
+
+option go_package = "github.com/plantx/platform/audit-service/api";
+
+import "google/api/annotations.proto";
+import "plantx/kit/authz.proto";
+
+service AuditService {
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse) {
+    option (google.api.http) = {
+      get: "/api/audit/v1/logs"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "audit"
+      resource: "log"
+      operation: "list"
+    };
+  }
+}
+
+message AuditLog {
+  string id = 1;
+  string tenant_id = 2;
+  string user_id = 3;
+  string action = 4;
+  string resource = 5;
+  int64 timestamp = 6;
+  string detail = 7;
+}
+
+message ListAuditLogsRequest {
+  string tenant_id = 1;
+  int64 start_time = 2;
+  int64 end_time = 3;
+  int32 limit = 4;
+}
+
+message ListAuditLogsResponse {
+  repeated AuditLog logs = 1;
+}

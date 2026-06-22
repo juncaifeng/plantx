@@ -1,0 +1,203 @@
+syntax = "proto3";
+
+package plantx.iam.v1;
+
+option go_package = "github.com/plantx/platform/iam-service/api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "plantx/kit/authz.proto";
+
+service IAMService {
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/iam/v1/users"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "user"
+      operation: "list"
+    };
+  }
+
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (google.api.http) = {
+      post: "/api/iam/v1/users"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "user"
+      operation: "create"
+    };
+  }
+
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
+    option (google.api.http) = {
+      get: "/api/iam/v1/roles"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "role"
+      operation: "list"
+    };
+  }
+
+  rpc GetRole(GetRoleRequest) returns (Role) {
+    option (google.api.http) = {
+      get: "/api/iam/v1/roles/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "role"
+      operation: "read"
+    };
+  }
+
+  rpc CreateRole(CreateRoleRequest) returns (Role) {
+    option (google.api.http) = {
+      post: "/api/iam/v1/roles"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "role"
+      operation: "create"
+    };
+  }
+
+  rpc UpdateRole(UpdateRoleRequest) returns (Role) {
+    option (google.api.http) = {
+      put: "/api/iam/v1/roles/{id}"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "role"
+      operation: "update"
+    };
+  }
+
+  rpc DeleteRole(DeleteRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/iam/v1/roles/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "role"
+      operation: "delete"
+    };
+  }
+
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/api/iam/v1/permissions"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "permission"
+      operation: "list"
+    };
+  }
+
+  rpc CreatePermission(CreatePermissionRequest) returns (Permission) {
+    option (google.api.http) = {
+      post: "/api/iam/v1/permissions"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "permission"
+      operation: "create"
+    };
+  }
+
+  rpc DeletePermission(DeletePermissionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/iam/v1/permissions/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "iam"
+      resource: "permission"
+      operation: "delete"
+    };
+  }
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string tenant_id = 3;
+  repeated string role_ids = 4;
+}
+
+message Role {
+  string id = 1;
+  string name = 2;
+  repeated string permissions = 3;
+  string description = 4;
+}
+
+message Permission {
+  string id = 1;
+  string name = 2;
+  string resource = 3;
+  string operation = 4;
+  string description = 5;
+}
+
+message ListUsersRequest {}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string tenant_id = 2;
+  repeated string role_ids = 3;
+}
+
+message ListRolesRequest {}
+
+message ListRolesResponse {
+  repeated Role roles = 1;
+}
+
+message GetRoleRequest {
+  string id = 1;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+  repeated string permissions = 2;
+  string description = 3;
+}
+
+message UpdateRoleRequest {
+  string id = 1;
+  string name = 2;
+  repeated string permissions = 3;
+  string description = 4;
+}
+
+message DeleteRoleRequest {
+  string id = 1;
+}
+
+message ListPermissionsRequest {}
+
+message ListPermissionsResponse {
+  repeated Permission permissions = 1;
+}
+
+message CreatePermissionRequest {
+  string name = 1;
+  string resource = 2;
+  string operation = 3;
+  string description = 4;
+}
+
+message DeletePermissionRequest {
+  string id = 1;
+}

@@ -1,0 +1,19 @@
+FROM golang:1.24-alpine AS builder
+WORKDIR /app
+ENV GOPROXY=https://goproxy.cn,https://proxy.golang.org,direct
+COPY kit/kit-go/go.mod kit/kit-go/go.sum ./kit/kit-go/
+COPY kit/kit-go/gateway/go.mod kit/kit-go/gateway/go.sum ./kit/kit-go/gateway/
+COPY platform/registry-service/go.mod platform/registry-service/go.sum ./platform/registry-service/
+COPY platform/iam-service/go.mod platform/iam-service/go.sum ./platform/iam-service/
+RUN cd platform/iam-service && go mod download
+COPY kit/kit-go/ ./kit/kit-go/
+COPY platform/registry-service/ ./platform/registry-service/
+COPY platform/iam-service/ ./platform/iam-service/
+RUN cd platform/iam-service && go build -o /bin/iam-service ./cmd
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /bin/iam-service .
+EXPOSE 8080
+CMD ["./iam-service"]

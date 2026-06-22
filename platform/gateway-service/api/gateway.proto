@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package plantx.gateway.v1;
+
+option go_package = "github.com/plantx/platform/gateway-service/api";
+
+import "google/api/annotations.proto";
+import "plantx/kit/authz.proto";
+
+service GatewayService {
+  rpc RegisterService(RegisterServiceRequest) returns (Service) {
+    option (google.api.http) = {
+      post: "/api/gateway/v1/services"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "gateway"
+      resource: "service"
+      operation: "create"
+    };
+  }
+
+  rpc ListServices(ListServicesRequest) returns (ServiceList) {
+    option (google.api.http) = {
+      get: "/api/gateway/v1/services"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "gateway"
+      resource: "service"
+      operation: "list"
+    };
+  }
+
+  rpc ListRoutes(ListRoutesRequest) returns (RouteList) {
+    option (google.api.http) = {
+      get: "/api/gateway/v1/services/{id}/routes"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "gateway"
+      resource: "route"
+      operation: "list"
+    };
+  }
+
+  rpc RegisterMicroApp(RegisterMicroAppRequest) returns (MicroApp) {
+    option (google.api.http) = {
+      post: "/api/gateway/v1/micro-apps"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "gateway"
+      resource: "microapp"
+      operation: "create"
+    };
+  }
+
+  rpc ListMicroApps(ListMicroAppsRequest) returns (MicroAppList) {
+    option (google.api.http) = {
+      get: "/api/gateway/v1/micro-apps"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "gateway"
+      resource: "microapp"
+      operation: "list"
+    };
+  }
+}
+
+message Service {
+  string id = 1;
+  string name = 2;
+  string grpc_host = 3;
+  string rest_prefix = 4;
+  repeated Route routes = 5;
+  MicroApp micro_app = 6;
+}
+
+message Route {
+  string path = 1;
+  string method = 2;
+}
+
+message MicroApp {
+  string name = 1;
+  string route = 2;
+  string bundle_url = 3;
+  string menu_label_key = 4;
+  string require_permission = 5;
+}
+
+message RegisterServiceRequest {
+  string name = 1;
+  string grpc_host = 2;
+  string rest_prefix = 3;
+}
+
+message ListServicesRequest {}
+
+message ServiceList {
+  repeated Service services = 1;
+}
+
+message ListRoutesRequest {
+  string id = 1;
+}
+
+message RouteList {
+  repeated Route routes = 1;
+}
+
+message RegisterMicroAppRequest {
+  string service_name = 1;
+  MicroApp micro_app = 2;
+}
+
+message ListMicroAppsRequest {}
+
+message MicroAppList {
+  repeated MicroApp micro_apps = 1;
+}

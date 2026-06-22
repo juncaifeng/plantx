@@ -1,0 +1,21 @@
+{
+  "name": "@plantx/order-sdk-kit",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'order-sdk-kit lint ok'"
+  },
+  "dependencies": {
+    "@plantx/kit-sdk-kit": "workspace:*",
+    "@plantx/order-sdk-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.5.0"
+  }
+}

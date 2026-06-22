@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "plantx.fullname" . }}-order
+  labels:
+    {{- include "plantx.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.orderService.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "plantx.name" . }}-order
+  ports:
+    - name: grpc
+      port: {{ .Values.orderService.service.grpcPort }}
+      targetPort: grpc
+    - name: http
+      port: {{ .Values.orderService.service.httpPort }}
+      targetPort: http

@@ -1,0 +1,493 @@
+syntax = "proto3";
+
+package plantx.registry.v1;
+
+option go_package = "github.com/plantx/platform/registry-service/api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "plantx/kit/authz.proto";
+
+service RegistryService {
+  rpc RegisterService(RegisterServiceRequest) returns (Service) {
+    option (google.api.http) = {
+      post: "/api/registry/v1/services"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "service"
+      operation: "create"
+    };
+  }
+
+  rpc DeregisterService(DeregisterServiceRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/registry/v1/services/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "service"
+      operation: "delete"
+    };
+  }
+
+  rpc GetService(GetServiceRequest) returns (Service) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/services/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "service"
+      operation: "read"
+    };
+  }
+
+  rpc ListServices(ListServicesRequest) returns (ServiceList) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/services"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "service"
+      operation: "list"
+    };
+  }
+
+  rpc RegisterMicroApp(RegisterMicroAppRequest) returns (MicroApp) {
+    option (google.api.http) = {
+      post: "/api/registry/v1/micro-apps"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "microapp"
+      operation: "create"
+    };
+  }
+
+  rpc ListMicroApps(ListMicroAppsRequest) returns (MicroAppList) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/micro-apps"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "microapp"
+      operation: "list"
+    };
+  }
+
+  rpc UpdateMicroApp(UpdateMicroAppRequest) returns (MicroApp) {
+    option (google.api.http) = {
+      put: "/api/registry/v1/micro-apps/{name}"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "microapp"
+      operation: "update"
+    };
+  }
+
+  rpc DeleteMicroApp(DeleteMicroAppRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/registry/v1/micro-apps/{name}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "microapp"
+      operation: "delete"
+    };
+  }
+
+  rpc CreateMenu(CreateMenuRequest) returns (Menu) {
+    option (google.api.http) = {
+      post: "/api/registry/v1/menus"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "menu"
+      operation: "create"
+    };
+  }
+
+  rpc ListMenus(ListMenusRequest) returns (MenuList) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/menus"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "menu"
+      operation: "list"
+    };
+  }
+
+  rpc UpdateMenu(UpdateMenuRequest) returns (Menu) {
+    option (google.api.http) = {
+      put: "/api/registry/v1/menus/{id}"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "menu"
+      operation: "update"
+    };
+  }
+
+  rpc DeleteMenu(DeleteMenuRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/registry/v1/menus/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "menu"
+      operation: "delete"
+    };
+  }
+
+  rpc ReorderMenus(ReorderMenusRequest) returns (MenuList) {
+    option (google.api.http) = {
+      post: "/api/registry/v1/menus/reorder"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "menu"
+      operation: "update"
+    };
+  }
+
+  rpc SyncRoutes(SyncRoutesRequest) returns (SyncRoutesResponse) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/sync-routes"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "route"
+      operation: "sync"
+    };
+  }
+
+  rpc GetRoutePolicy(GetRoutePolicyRequest) returns (RoutePolicy) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/services/{service_id}/route-policy"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "route"
+      operation: "read"
+    };
+  }
+
+  rpc SetRoutePolicy(SetRoutePolicyRequest) returns (RoutePolicy) {
+    option (google.api.http) = {
+      put: "/api/registry/v1/services/{service_id}/route-policy"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "route"
+      operation: "update"
+    };
+  }
+
+  rpc RegisterApplication(RegisterApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      post: "/api/registry/v1/applications"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "create"
+    };
+  }
+
+  rpc ListApplications(ListApplicationsRequest) returns (ApplicationList) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/applications"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "list"
+    };
+  }
+
+  rpc GetApplication(GetApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/applications/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "read"
+    };
+  }
+
+  rpc UpdateApplication(UpdateApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      put: "/api/registry/v1/applications/{id}"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "update"
+    };
+  }
+
+  rpc DeleteApplication(DeleteApplicationRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/registry/v1/applications/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "delete"
+    };
+  }
+
+  rpc GetApplicationMenus(GetApplicationMenusRequest) returns (MenuList) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/applications/{application_id}/menus"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "read"
+    };
+  }
+
+  rpc GetApplicationMicroApps(GetApplicationMicroAppsRequest) returns (MicroAppList) {
+    option (google.api.http) = {
+      get: "/api/registry/v1/applications/{application_id}/micro-apps"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "application"
+      operation: "read"
+    };
+  }
+}
+
+enum ApplicationStatus {
+  APPLICATION_STATUS_UNSPECIFIED = 0;
+  APPLICATION_STATUS_ACTIVE = 1;
+  APPLICATION_STATUS_OFFLINE = 2;
+}
+
+message Application {
+  string id = 1;
+  string key = 2;
+  string name = 3;
+  string label_key = 4;
+  string icon = 5;
+  string description = 6;
+  ApplicationStatus status = 7;
+  int32 sort_order = 8;
+}
+
+message Service {
+  string id = 1;
+  string name = 2;
+  string grpc_host = 3;
+  string rest_prefix = 4;
+  repeated Route routes = 5;
+  repeated MicroApp micro_apps = 6;
+  string application_id = 7;
+  string application_key = 8;
+}
+
+message Route {
+  string path = 1;
+  string method = 2;
+}
+
+message MicroApp {
+  string name = 1;
+  string route = 2;
+  string bundle_url = 3;
+  string menu_label_key = 4;
+  string require_permission = 5;
+  string application_id = 6;
+  string application_key = 7;
+}
+
+message RegisterServiceRequest {
+  string name = 1;
+  string grpc_host = 2;
+  string rest_prefix = 3;
+  string application_id = 4;
+  string application_key = 5;
+}
+
+message DeregisterServiceRequest {
+  string id = 1;
+}
+
+message GetServiceRequest {
+  string id = 1;
+}
+
+message ListServicesRequest {}
+
+message ServiceList {
+  repeated Service services = 1;
+}
+
+message RegisterMicroAppRequest {
+  string service_name = 1;
+  MicroApp micro_app = 2;
+  string application_id = 3;
+  string application_key = 4;
+}
+
+message ListMicroAppsRequest {}
+
+message MicroAppList {
+  repeated MicroApp micro_apps = 1;
+}
+
+message UpdateMicroAppRequest {
+  string name = 1;
+  string route = 2;
+  string bundle_url = 3;
+  string menu_label_key = 4;
+  string require_permission = 5;
+}
+
+message DeleteMicroAppRequest {
+  string name = 1;
+}
+
+message Menu {
+  string id = 1;
+  string label_key = 2;
+  string route = 3;
+  string icon = 4;
+  string parent_id = 5;
+  int32 sort_order = 6;
+  string micro_app_name = 7;
+  string require_permission = 8;
+  string application_id = 9;
+  string application_key = 10;
+}
+
+message CreateMenuRequest {
+  string label_key = 1;
+  string route = 2;
+  string icon = 3;
+  string parent_id = 4;
+  int32 sort_order = 5;
+  string micro_app_name = 6;
+  string require_permission = 7;
+  string application_id = 8;
+  string application_key = 9;
+}
+
+message ListMenusRequest {}
+
+message UpdateMenuRequest {
+  string id = 1;
+  string label_key = 2;
+  string route = 3;
+  string icon = 4;
+  string parent_id = 5;
+  int32 sort_order = 6;
+  string micro_app_name = 7;
+  string require_permission = 8;
+  string application_id = 9;
+  string application_key = 10;
+}
+
+message DeleteMenuRequest {
+  string id = 1;
+}
+
+message ReorderMenusRequest {
+  message Item {
+    string id = 1;
+    int32 sort_order = 2;
+  }
+  repeated Item items = 1;
+}
+
+message MenuList {
+  repeated Menu menus = 1;
+}
+
+message RoutePolicy {
+  int32 rate_limit_rps = 1;
+  bool auth_required = 2;
+  int32 canary_weight = 3;
+  string canary_host = 4;
+}
+
+message ServiceRoute {
+  string service_id = 1;
+  string name = 2;
+  string rest_prefix = 3;
+  string upstream_host = 4;
+  repeated Route routes = 5;
+  RoutePolicy policy = 6;
+}
+
+message SyncRoutesRequest {}
+
+message SyncRoutesResponse {
+  repeated ServiceRoute routes = 1;
+}
+
+message GetRoutePolicyRequest {
+  string service_id = 1;
+}
+
+message SetRoutePolicyRequest {
+  string service_id = 1;
+  RoutePolicy policy = 2;
+}
+
+message RegisterApplicationRequest {
+  string key = 1;
+  string name = 2;
+  string label_key = 3;
+  string icon = 4;
+  string description = 5;
+  ApplicationStatus status = 6;
+  int32 sort_order = 7;
+}
+
+message GetApplicationRequest {
+  string id = 1;
+}
+
+message UpdateApplicationRequest {
+  string id = 1;
+  string key = 2;
+  string name = 3;
+  string label_key = 4;
+  string icon = 5;
+  string description = 6;
+  ApplicationStatus status = 7;
+  int32 sort_order = 8;
+}
+
+message DeleteApplicationRequest {
+  string id = 1;
+}
+
+message ListApplicationsRequest {}
+
+message ApplicationList {
+  repeated Application applications = 1;
+}
+
+message GetApplicationMenusRequest {
+  string application_id = 1;
+}
+
+message GetApplicationMicroAppsRequest {
+  string application_id = 1;
+}

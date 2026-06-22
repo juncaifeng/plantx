@@ -1,0 +1,35 @@
+deployment:
+  role: traditional
+  role_traditional:
+    config_provider: etcd
+  etcd:
+    host:
+      - "http://etcd:2379"
+
+plugins:
+  - request-id
+  - proxy-rewrite
+  - jwt-auth
+  - opa
+
+plugin_attr:
+  request-id:
+    snowflake_init_seq: 0
+    snowflake_init_worker_id: 0
+    algorithm: uuid
+    enable_claim_for_header: true
+    header_name: X-Request-Id
+
+routes:
+  - uri: /api/order/*
+    upstream_id: 1
+    plugins:
+      request-id: {}
+      proxy-rewrite:
+        regex_uri: ["^/api/order/(.*)", "/$1"]
+
+upstreams:
+  - id: 1
+    nodes:
+      "order-service:8081": 1
+    type: roundrobin

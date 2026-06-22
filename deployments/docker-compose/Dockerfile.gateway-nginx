@@ -1,0 +1,9 @@
+FROM nginx:alpine
+
+RUN apk add --no-cache curl jq bash
+
+COPY deployments/docker-compose/nginx.conf /etc/nginx/nginx.conf
+COPY deployments/docker-compose/nginx-sync.sh /usr/local/bin/nginx-sync.sh
+RUN chmod +x /usr/local/bin/nginx-sync.sh
+
+ENTRYPOINT ["/usr/local/bin/nginx-sync.sh"]

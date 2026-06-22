@@ -1,0 +1,20 @@
+[Unit]
+Description=PlantX Order Service
+After=network.target
+
+[Service]
+Type=simple
+User=plantx
+Group=plantx
+ExecStart=/opt/plantx/bin/order-service
+Restart=on-failure
+RestartSec=5
+Environment="ORDER_GRPC_PORT=8080"
+Environment="ORDER_HTTP_PORT=8081"
+Environment="ORDER_DATABASE_DSN=postgres://plantx:plantx@localhost:5432/plantx?sslmode=disable"
+Environment="ORDER_NATS_URL=nats://localhost:4222"
+Environment="MAXKEY_ISSUER=http://localhost:9527/maxkey"
+Environment="OPA_URL=http://localhost:8181"
+
+[Install]
+WantedBy=multi-user.target

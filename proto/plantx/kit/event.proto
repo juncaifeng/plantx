@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package plantx.kit.event;
+
+option go_package = "github.com/plantx/kit/kit-go/proto/event;eventpb";
+
+message EventEnvelope {
+  string event_name = 1;
+  bytes payload = 2;
+  string trace_id = 3;
+  string tenant_id = 4;
+  string user_id = 5;
+  int64 occurred_at = 6;
+}

@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package plantx.tenant.v1;
+
+option go_package = "github.com/plantx/platform/tenant-service/api";
+
+import "google/api/annotations.proto";
+import "plantx/kit/authz.proto";
+
+service TenantService {
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse) {
+    option (google.api.http) = {
+      get: "/api/tenant/v1/tenants"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "tenant"
+      resource: "tenant"
+      operation: "list"
+    };
+  }
+
+  rpc CreateTenant(CreateTenantRequest) returns (Tenant) {
+    option (google.api.http) = {
+      post: "/api/tenant/v1/tenants"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "tenant"
+      resource: "tenant"
+      operation: "create"
+    };
+  }
+}
+
+message Tenant {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+  int64 created_at = 4;
+}
+
+message ListTenantsRequest {}
+
+message ListTenantsResponse {
+  repeated Tenant tenants = 1;
+}
+
+message CreateTenantRequest {
+  string name = 1;
+}

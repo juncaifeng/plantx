@@ -1,0 +1,52 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# Node
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Generated
+**/gen/
+**/*.pb.go
+**/*.pb.gw.go
+**/*.pb.ts
+**/sqlc/
+
+# OpenSpec
+.openspec/
+
+# Local runtime artifacts
+.gocache/
+mock-auth.exe
+.playwright/
+.playwright-cli/
+.playwright-mcp/

@@ -1,0 +1,12 @@
+[Unit]
+Description=PlantX Nginx Gateway
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/nginx -c /etc/plantx/nginx/nginx.conf
+ExecReload=/usr/sbin/nginx -s reload
+ExecStop=/usr/sbin/nginx -s quit
+
+[Install]
+WantedBy=multi-user.target

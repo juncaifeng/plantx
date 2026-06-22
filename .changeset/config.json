@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@plantx/portal",
+    "@plantx/audit-admin-ui",
+    "@plantx/gateway-admin-ui",
+    "@plantx/iam-admin-ui",
+    "@plantx/api-explorer-ui",
+    "@plantx/registry-admin-ui",
+    "@plantx/tenant-admin-ui",
+    "@plantx/order-sdk-api",
+    "@plantx/order-sdk-kit",
+    "@plantx/order-ui",
+    "@plantx/test-sdk-api",
+    "@plantx/test-ui"
+  ]
+}

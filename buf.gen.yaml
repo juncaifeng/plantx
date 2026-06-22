@@ -1,0 +1,28 @@
+version: v1
+managed:
+  enabled: true
+plugins:
+  - plugin: go
+    out: .
+    opt:
+      - paths=source_relative
+  - plugin: go-grpc
+    out: .
+    opt:
+      - paths=source_relative
+  - plugin: grpc-gateway
+    out: .
+    opt:
+      - paths=source_relative
+      - generate_unbound_methods=true
+  # TypeScript SDK generation (requires @protobuf-ts/plugin)
+  - plugin: ts
+    out: .
+    opt:
+      - generate_dependencies
+      - optimize_code_size
+  # OpenAPI spec generation
+  - plugin: buf.build/community/google-gnostic-openapi
+    out: openapi
+    opt:
+      - output_mode=source_relative

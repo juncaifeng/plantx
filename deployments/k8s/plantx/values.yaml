@@ -1,0 +1,36 @@
+global:
+  imageRegistry: ""
+  imageTag: latest
+
+orderService:
+  replicas: 1
+  image: plantx/order-service
+  grpcPort: 8080
+  httpPort: 8081
+  databaseDSN: ""
+  natsURL: ""
+  maxkeyIssuer: ""
+  maxkeyJWKSURL: ""
+  opaURL: ""
+
+postgresql:
+  enabled: true
+  auth:
+    username: plantx
+    password: plantx
+    database: plantx
+
+nats:
+  enabled: true
+
+maxkey:
+  enabled: true
+  image: maxkey/maxkey:latest
+
+opa:
+  enabled: true
+  image: openpolicyagent/opa:latest
+
+ingress:
+  enabled: false
+  host: plantx.local

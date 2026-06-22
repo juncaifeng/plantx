@@ -1,0 +1,38 @@
+version: "2"
+sql:
+  - schema: "services/order/migrations"
+    queries: "services/order/internal/infra/sqlc"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "services/order/internal/infra/sqlc"
+        sql_package: "database/sql"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+  - schema: "platform/registry-service/migrations"
+    queries: "platform/registry-service/internal/infra/sqlc"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "platform/registry-service/internal/infra/sqlc"
+        sql_package: "database/sql"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false
+  - schema: "platform/iam-service/migrations"
+    queries: "platform/iam-service/internal/infra/sqlc"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "platform/iam-service/internal/infra/sqlc"
+        sql_package: "database/sql"
+        emit_json_tags: true
+        emit_prepared_queries: false
+        emit_interface: true
+        emit_exact_table_names: false

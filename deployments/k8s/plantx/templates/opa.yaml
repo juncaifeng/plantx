@@ -1,0 +1,56 @@
+{{- if .Values.opa.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "plantx.name" . }}-opa
+  labels:
+    {{- include "plantx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "plantx.name" . }}-opa
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "plantx.name" . }}-opa
+    spec:
+      containers:
+        - name: opa
+          image: {{ .Values.opa.image }}
+          args: ["run", "--server", "--addr", ":8181", "/policies"]
+          ports:
+            - containerPort: 8181
+          volumeMounts:
+            - name: policies
+              mountPath: /policies
+      volumes:
+        - name: policies
+          configMap:
+            name: {{ include "plantx.name" . }}-opa-policies
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "plantx.name" . }}-opa
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "plantx.name" . }}-opa
+  ports:
+    - port: 8181
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "plantx.name" . }}-opa-policies
+data:
+  authz.rego: |
+    package plantx.authz
+    default allow := false
+    allow if "admin" in input.user.roles
+    allow if {
+      required := sprintf("%s:%s:%s", [input.action.service, input.action.resource, input.action.operation])
+      required in input.user.permissions
+    }
+{{- end }}
