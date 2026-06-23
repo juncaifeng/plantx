@@ -354,6 +354,40 @@ func toDomainApplicationStatus(s api.ApplicationStatus) domain.ApplicationStatus
 	}
 }
 
+func toProtoResourceStatus(s domain.ResourceStatus) api.ResourceStatus {
+	switch s {
+	case domain.ResourceStatusDraft:
+		return api.ResourceStatus_RESOURCE_STATUS_DRAFT
+	case domain.ResourceStatusPending:
+		return api.ResourceStatus_RESOURCE_STATUS_PENDING
+	case domain.ResourceStatusOnline:
+		return api.ResourceStatus_RESOURCE_STATUS_ONLINE
+	case domain.ResourceStatusOffline:
+		return api.ResourceStatus_RESOURCE_STATUS_OFFLINE
+	case domain.ResourceStatusUpdating:
+		return api.ResourceStatus_RESOURCE_STATUS_UPDATING
+	default:
+		return api.ResourceStatus_RESOURCE_STATUS_UNSPECIFIED
+	}
+}
+
+func toDomainResourceStatus(s api.ResourceStatus) domain.ResourceStatus {
+	switch s {
+	case api.ResourceStatus_RESOURCE_STATUS_DRAFT:
+		return domain.ResourceStatusDraft
+	case api.ResourceStatus_RESOURCE_STATUS_PENDING:
+		return domain.ResourceStatusPending
+	case api.ResourceStatus_RESOURCE_STATUS_ONLINE:
+		return domain.ResourceStatusOnline
+	case api.ResourceStatus_RESOURCE_STATUS_OFFLINE:
+		return domain.ResourceStatusOffline
+	case api.ResourceStatus_RESOURCE_STATUS_UPDATING:
+		return domain.ResourceStatusUpdating
+	default:
+		return domain.ResourceStatusOnline
+	}
+}
+
 func toProtoService(svc *domain.Service) *api.Service {
 	if svc == nil {
 		return nil
@@ -375,6 +409,7 @@ func toProtoService(svc *domain.Service) *api.Service {
 		MicroApps:      microApps,
 		ApplicationId:  svc.ApplicationID,
 		ApplicationKey: svc.ApplicationKey,
+		Status:         toProtoResourceStatus(svc.Status),
 	}
 }
 
@@ -394,6 +429,7 @@ func toDomainMicroApp(m *api.MicroApp, applicationID string) *domain.MicroApp {
 		RequirePermission: m.GetRequirePermission(),
 		ApplicationID:     appID,
 		Upstream:          m.GetUpstream(),
+		Status:            toDomainResourceStatus(m.GetStatus()),
 	}
 }
 
@@ -410,6 +446,7 @@ func toProtoMicroApp(m *domain.MicroApp) *api.MicroApp {
 		ApplicationId:     m.ApplicationID,
 		ApplicationKey:    m.ApplicationKey,
 		Upstream:          m.Upstream,
+		Status:            toProtoResourceStatus(m.Status),
 	}
 }
 
@@ -427,6 +464,7 @@ func toDomainMenu(m *api.Menu) *domain.Menu {
 		MicroAppName:      m.GetMicroAppName(),
 		RequirePermission: m.GetRequirePermission(),
 		ApplicationID:     m.GetApplicationId(),
+		Status:            toDomainResourceStatus(m.GetStatus()),
 	}
 }
 
@@ -445,6 +483,7 @@ func toProtoMenu(m *domain.Menu) *api.Menu {
 		RequirePermission: m.RequirePermission,
 		ApplicationId:     m.ApplicationID,
 		ApplicationKey:    m.ApplicationKey,
+		Status:            toProtoResourceStatus(m.Status),
 	}
 }
 
