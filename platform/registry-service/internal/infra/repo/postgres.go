@@ -168,6 +168,7 @@ func (r *PostgresRepo) RegisterService(ctx context.Context, name, grpcHost, rest
 		GrpcHost:      grpcHost,
 		RestPrefix:    restPrefix,
 		ApplicationID: appID,
+		Status:        string(domain.ResourceStatusOnline),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("upsert service: %w", err)
@@ -252,6 +253,7 @@ func (r *PostgresRepo) RegisterMicroApp(ctx context.Context, serviceName string,
 		RequirePermission: microApp.RequirePermission,
 		ApplicationID:     appID,
 		Upstream:          nullString(microApp.Upstream),
+		Status:            defaultResourceStatus(microApp.Status),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("upsert micro-app: %w", err)
@@ -292,6 +294,7 @@ func (r *PostgresRepo) UpdateMicroApp(ctx context.Context, name string, microApp
 		MenuLabelKey:      microApp.MenuLabelKey,
 		RequirePermission: microApp.RequirePermission,
 		Upstream:          nullString(microApp.Upstream),
+		Status:            defaultResourceStatus(microApp.Status),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("update micro-app: %w", err)
@@ -321,6 +324,7 @@ func (r *PostgresRepo) CreateMenu(ctx context.Context, menu *domain.Menu) (*doma
 		MicroAppName:      menu.MicroAppName,
 		RequirePermission: menu.RequirePermission,
 		ApplicationID:     nullUUID(menu.ApplicationID),
+		Status:            defaultResourceStatus(menu.Status),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create menu: %w", err)
@@ -368,6 +372,7 @@ func (r *PostgresRepo) UpdateMenu(ctx context.Context, menu *domain.Menu) (*doma
 		MicroAppName:      menu.MicroAppName,
 		RequirePermission: menu.RequirePermission,
 		ApplicationID:     nullUUID(menu.ApplicationID),
+		Status:            defaultResourceStatus(menu.Status),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("update menu: %w", err)
@@ -427,6 +432,7 @@ func (r *PostgresRepo) serviceToDomain(ctx context.Context, svc sqlc.RegistrySer
 		},
 		MicroApps: microApps,
 		Policy:    policy,
+		Status:    domain.ResourceStatus(svc.Status),
 	}
 	if svc.ApplicationID.Valid {
 		d.ApplicationID = svc.ApplicationID.UUID.String()
@@ -538,6 +544,7 @@ func toDomainMicroApp(row sqlc.MicroApp) *domain.MicroApp {
 		BundleURL:         row.BundleUrl,
 		MenuLabelKey:      row.MenuLabelKey,
 		RequirePermission: row.RequirePermission,
+		Status:            domain.ResourceStatus(row.Status),
 	}
 	if row.ApplicationID.Valid {
 		m.ApplicationID = row.ApplicationID.UUID.String()
@@ -557,6 +564,7 @@ func toDomainMenu(row sqlc.Menu) *domain.Menu {
 		SortOrder:         row.SortOrder,
 		MicroAppName:      row.MicroAppName,
 		RequirePermission: row.RequirePermission,
+		Status:            domain.ResourceStatus(row.Status),
 	}
 	if row.ParentID.Valid {
 		m.ParentID = row.ParentID.UUID.String()
@@ -577,6 +585,13 @@ func toDomainRoutePolicy(row sqlc.RoutePolicy) *domain.RoutePolicy {
 		p.CanaryHost = row.CanaryHost.String
 	}
 	return p
+}
+
+func defaultResourceStatus(s domain.ResourceStatus) string {
+	if s == "" {
+		return string(domain.ResourceStatusOnline)
+	}
+	return string(s)
 }
 
 func nullUUID(s string) uuid.NullUUID {
