@@ -305,6 +305,20 @@ services:
     networks:
       - plantx
 
+  temporal-worker:
+    build:
+      context: ../..
+      dockerfile: platform/temporal-worker/Dockerfile
+    container_name: docker-compose-temporal-worker-1
+    environment:
+      - TEMPORAL_HOST=temporal-server:7233
+      - REGISTRY_SERVICE_GRPC_ADDR=registry-service:8080
+    depends_on:
+      - temporal-server
+      - registry-service
+    networks:
+      - plantx
+
 volumes:
   postgres_data:
   mock_auth_data:
