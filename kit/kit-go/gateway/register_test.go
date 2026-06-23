@@ -161,7 +161,7 @@ func TestAutoRegister(t *testing.T) {
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := api.NewRegistryServiceClient(conn)
 
 	svcs, err := client.ListServices(ctx, &api.ListServicesRequest{})
@@ -225,7 +225,7 @@ func TestAutoRegisterWithApplication(t *testing.T) {
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := api.NewRegistryServiceClient(conn)
 
 	apps, err := client.ListApplications(ctx, &api.ListApplicationsRequest{})
@@ -316,7 +316,7 @@ func TestAutoRegisterWithSharedApplication(t *testing.T) {
 	if err != nil {
 		t.Fatalf("dial: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	client := api.NewRegistryServiceClient(conn)
 
 	apps, err := client.ListApplications(ctx, &api.ListApplicationsRequest{})

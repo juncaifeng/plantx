@@ -1,3 +1,4 @@
+// Package gateway provides a gRPC client for the platform registry service.
 package gateway
 
 import (
