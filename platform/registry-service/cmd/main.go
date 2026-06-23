@@ -21,6 +21,7 @@ import (
 	"github.com/plantx/platform/registry-service/internal/app"
 	"github.com/plantx/platform/registry-service/internal/infra/migrate"
 	"github.com/plantx/platform/registry-service/internal/infra/repo"
+	"github.com/plantx/platform/registry-service/internal/infra/temporal"
 	grpcsrv "github.com/plantx/platform/registry-service/internal/interfaces/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -148,7 +149,16 @@ func main() {
 	}
 
 	repository := repo.NewPostgresRepo(sqldb)
-	registry := app.NewRegistry(repository)
+
+	var registryOpts []app.RegistryOption
+	if temporalClient, err := temporal.NewClient(); err != nil {
+		logger.Warn("failed to create temporal client; lifecycle workflows will not be triggered", kitlog.F("error", err))
+	} else {
+		registryOpts = append(registryOpts, app.WithTemporalClient(temporalClient))
+		logger.Info("temporal client created")
+	}
+
+	registry := app.NewRegistry(repository, registryOpts...)
 	handler := grpcsrv.NewHandler(registry)
 	api.RegisterRegistryServiceServer(srv.GRPC(), handler)
 	reflection.Register(srv.GRPC())
