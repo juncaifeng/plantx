@@ -37,6 +37,7 @@ type MicroApp struct {
 	RequirePermission string
 	ApplicationID     string
 	ApplicationKey    string
+	Upstream          string
 }
 
 // RoutePolicy represents gateway routing/edge policies for a service.
