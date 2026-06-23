@@ -56,6 +56,11 @@ render_conf() {
     echo "upstream mock_auth { server mock-auth:8080; }"
     echo "upstream portal { server portal:80; }"
     echo "$routes_json" | jq -r '.routes[]? | "upstream \(.name | gsub("-"; "_")) { server \(.upstreamHost); }"'
+    echo "$micro_apps_json" | jq -r '
+      .microApps[]? |
+      select(.upstream and (.upstream | length) > 0) |
+      "upstream \(.name | gsub("-"; "_")) { server \(.upstream); }"
+    '
   } > /etc/nginx/conf.d/upstreams.conf
 
   # Rate limit zones
@@ -81,8 +86,9 @@ render_conf() {
   {
     echo "$micro_apps_json" | jq -r '
       .microApps[]? |
+      (if (.upstream // "") | length > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
       "    location \(.bundleUrl | sub("/[^/]+$"; "/")) {\n" +
-      "        proxy_pass http://portal\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
+      "        proxy_pass http://\($target)\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
       "        proxy_set_header Host $host;\n" +
       "    }"
     '
