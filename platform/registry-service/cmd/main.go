@@ -112,6 +112,7 @@ func main() {
 		AuthExcludedMethods: []string{
 			"/plantx.registry.v1.RegistryService/RegisterService",
 			"/plantx.registry.v1.RegistryService/DeregisterService",
+			"/plantx.registry.v1.RegistryService/UpdateServiceStatus",
 			"/plantx.registry.v1.RegistryService/GetService",
 			"/plantx.registry.v1.RegistryService/ListServices",
 			"/plantx.registry.v1.RegistryService/RegisterMicroApp",

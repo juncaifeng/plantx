@@ -185,6 +185,7 @@ func seedDemoMenus(stdLogger *stdlog.Logger) error {
 			Route:             m.route,
 			Icon:              m.icon,
 			SortOrder:         10,
+			MicroAppName:      "demo-ui",
 			ApplicationId:     appID,
 			RequirePermission: m.perm,
 		})
