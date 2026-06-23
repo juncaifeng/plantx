@@ -10,7 +10,8 @@ import (
 	temporalworker "go.temporal.io/sdk/worker"
 )
 
-func Start(ctx context.Context, temporalHost string) error {
+// Start runs the Temporal worker for the plantx-platform task queue.
+func Start(ctx context.Context, temporalHost, registryAddr string) error {
 	c, err := client.Dial(client.Options{
 		HostPort: temporalHost,
 	})
@@ -21,9 +22,9 @@ func Start(ctx context.Context, temporalHost string) error {
 
 	w := temporalworker.New(c, "plantx-platform", temporalworker.Options{})
 	w.RegisterWorkflow(workflows.ServiceLifecycleWorkflow)
-	w.RegisterActivity(activities.UpdateMenuStatus)
-	w.RegisterActivity(activities.UpdateMicroAppStatus)
-	w.RegisterActivity(activities.AuditLog)
+
+	registryActivities := &activities.RegistryActivities{RegistryAddr: registryAddr}
+	w.RegisterActivity(registryActivities)
 
 	if err := w.Run(temporalworker.InterruptCh()); err != nil {
 		return fmt.Errorf("run worker: %w", err)
