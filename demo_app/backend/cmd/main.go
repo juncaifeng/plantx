@@ -4,6 +4,8 @@ import (
 	"context"
 	stdlog "log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	demoapi "github.com/plantx/demo_app/backend/api"
@@ -116,7 +118,10 @@ func main() {
 	}()
 
 	stdLogger.Printf("demo service starting on grpc_port=%d http_port=%d", grpcPort, httpPort)
-	if err := srv.Run(context.Background()); err != nil {
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	if err := srv.Run(ctx); err != nil {
 		stdLogger.Fatalf("server failed: %v", err)
 	}
 }
