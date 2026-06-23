@@ -81,6 +81,7 @@ services:
       - gateway-service
       - registry-service
       - audit-service
+      - demo-service
 
   gateway:
     build:
@@ -105,6 +106,8 @@ services:
       - audit-service
       - mock-auth
       - portal
+      - demo-service
+      - demo-ui
 
   order-service:
     build:
@@ -236,6 +239,37 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
+
+  demo-service:
+    build:
+      context: ../..
+      dockerfile: demo_app/backend/Dockerfile
+    environment:
+      GRPC_PORT: "8080"
+      HTTP_PORT: "8081"
+      MAXKEY_ISSUER: "http://mock-auth:8080"
+      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
+      OPA_URL: "http://opa:8181"
+      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
+      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+      mock-auth:
+        condition: service_started
+      opa:
+        condition: service_started
+      registry-service:
+        condition: service_healthy
+
+  demo-ui:
+    build:
+      context: ../../demo_app/frontend
+      dockerfile: Dockerfile
+    container_name: docker-compose-demo-ui-1
+    restart: unless-stopped
 
 volumes:
   postgres_data:
