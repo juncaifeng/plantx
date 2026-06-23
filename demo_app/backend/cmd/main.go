@@ -106,9 +106,14 @@ func main() {
 	// micro-app registration; menu entities are created by calling the platform
 	// registry-service API directly. This is a one-time bootstrap step, not a
 	// kit-layer reimplementation.
-	if err := seedDemoMenus(stdLogger); err != nil {
-		stdLogger.Printf("failed to seed demo menus: %v", err)
-	}
+	// Seed demo menus asynchronously: AutoRegister creates the application
+	// during service startup, which may not have completed by the time we
+	// first query the registry.
+	go func() {
+		if err := seedDemoMenus(stdLogger); err != nil {
+			stdLogger.Printf("failed to seed demo menus: %v", err)
+		}
+	}()
 
 	stdLogger.Printf("demo service starting on grpc_port=%d http_port=%d", grpcPort, httpPort)
 	if err := srv.Run(context.Background()); err != nil {
@@ -138,19 +143,26 @@ func seedDemoMenus(stdLogger *stdlog.Logger) error {
 	defer conn.Close()
 	client := registryapi.NewRegistryServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	apps, err := client.ListApplications(ctx, &registryapi.ListApplicationsRequest{})
-	if err != nil {
-		return err
-	}
 	var appID string
-	for _, a := range apps.GetApplications() {
-		if a.GetKey() == "demo" {
-			appID = a.GetId()
+	for i := 0; i < 30; i++ {
+		apps, err := client.ListApplications(ctx, &registryapi.ListApplicationsRequest{})
+		if err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		for _, a := range apps.GetApplications() {
+			if a.GetKey() == "demo" {
+				appID = a.GetId()
+				break
+			}
+		}
+		if appID != "" {
 			break
 		}
+		time.Sleep(2 * time.Second)
 	}
 	if appID == "" {
 		return nil // Application not found; menu seeding skipped.
