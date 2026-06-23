@@ -1,3 +1,4 @@
+// Package maxkey provides a MaxKey/JWT authenticator for Kit services.
 package maxkey
 
 import (

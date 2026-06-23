@@ -1,3 +1,4 @@
+// Package zaplog implements the Kit logger using Uber Zap.
 package zaplog
 
 import (

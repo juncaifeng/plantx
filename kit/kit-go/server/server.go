@@ -137,7 +137,7 @@ func (s *Server) GRPC() *grpc.Server { return s.grpc }
 // RegisterGateway wires the grpc-gateway reverse proxy into the HTTP server.
 func (s *Server) RegisterGateway(ctx context.Context, register func(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error) error {
 	gwMux := runtime.NewServeMux(
-		runtime.WithMetadata(func(ctx context.Context, r *http.Request) metadata.MD {
+		runtime.WithMetadata(func(_ context.Context, r *http.Request) metadata.MD {
 			md := metadata.MD{}
 			for k, v := range r.Header {
 				if key, ok := runtime.DefaultHeaderMatcher(k); ok {

@@ -1,3 +1,4 @@
+// Package opa provides an OPA-based policy authorizer for Kit services.
 package opa
 
 import (
