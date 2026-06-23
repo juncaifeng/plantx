@@ -17,6 +17,7 @@ type MicroApp struct {
 	BundleURL         string
 	MenuLabelKey      string
 	RequirePermission string
+	Upstream          string
 }
 
 // Application describes a product / application that groups services, micro-apps and menus.
@@ -40,6 +41,7 @@ func toPBMicroApp(m *MicroApp) *api.MicroApp {
 		BundleUrl:         m.BundleURL,
 		MenuLabelKey:      m.MenuLabelKey,
 		RequirePermission: m.RequirePermission,
+		Upstream:          m.Upstream,
 	}
 }
 
