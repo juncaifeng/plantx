@@ -103,12 +103,12 @@ export function Layout({ onLogout }: LayoutProps) {
     getStoredApplicationId
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { applications, loading: applicationsLoading, error: applicationsError } = useApplications();
+  const { activeApplications, loading: applicationsLoading, error: applicationsError } = useApplications();
 
   const selectedApplication = useMemo<Application | undefined>(() => {
     if (!selectedApplicationId) return undefined;
-    return applications.find((app) => app.id === selectedApplicationId);
-  }, [applications, selectedApplicationId]);
+    return activeApplications.find((app) => app.id === selectedApplicationId);
+  }, [activeApplications, selectedApplicationId]);
 
   const handleSelectApplication = (application: Application) => {
     setSelectedApplicationId(application.id || null);
@@ -260,7 +260,7 @@ export function Layout({ onLogout }: LayoutProps) {
         </Content>
       </AntLayout>
       <ProductDrawer
-        applications={applications}
+        applications={activeApplications}
         loading={applicationsLoading}
         error={applicationsError}
         value={selectedApplication}
