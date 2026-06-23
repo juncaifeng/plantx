@@ -251,6 +251,7 @@ func (r *PostgresRepo) RegisterMicroApp(ctx context.Context, serviceName string,
 		MenuLabelKey:      microApp.MenuLabelKey,
 		RequirePermission: microApp.RequirePermission,
 		ApplicationID:     appID,
+		Upstream:          nullString(microApp.Upstream),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("upsert micro-app: %w", err)
@@ -290,6 +291,7 @@ func (r *PostgresRepo) UpdateMicroApp(ctx context.Context, name string, microApp
 		BundleUrl:         microApp.BundleURL,
 		MenuLabelKey:      microApp.MenuLabelKey,
 		RequirePermission: microApp.RequirePermission,
+		Upstream:          nullString(microApp.Upstream),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("update micro-app: %w", err)
@@ -539,6 +541,9 @@ func toDomainMicroApp(row sqlc.MicroApp) *domain.MicroApp {
 	}
 	if row.ApplicationID.Valid {
 		m.ApplicationID = row.ApplicationID.UUID.String()
+	}
+	if row.Upstream.Valid {
+		m.Upstream = row.Upstream.String
 	}
 	return m
 }
