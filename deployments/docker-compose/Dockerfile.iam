@@ -4,6 +4,7 @@ ENV GOPROXY=https://goproxy.cn,https://proxy.golang.org,direct
 COPY kit/kit-go/go.mod kit/kit-go/go.sum ./kit/kit-go/
 COPY kit/kit-go/gateway/go.mod kit/kit-go/gateway/go.sum ./kit/kit-go/gateway/
 COPY platform/registry-service/go.mod platform/registry-service/go.sum ./platform/registry-service/
+COPY platform/registry-service/api/go.mod platform/registry-service/api/go.sum ./platform/registry-service/api/
 COPY platform/iam-service/go.mod platform/iam-service/go.sum ./platform/iam-service/
 RUN cd platform/iam-service && go mod download
 COPY kit/kit-go/ ./kit/kit-go/
