@@ -59,6 +59,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      TEMPORAL_HOST: temporal-server:7233
     depends_on:
       postgres:
         condition: service_healthy
