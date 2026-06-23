@@ -1,3 +1,4 @@
+// Package event contains audit-service event bus subscribers.
 package event
 
 import (

@@ -1,3 +1,4 @@
+// Package grpc implements the audit-service gRPC handlers.
 package grpc
 
 import (

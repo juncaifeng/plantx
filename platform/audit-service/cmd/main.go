@@ -1,3 +1,4 @@
+// The audit-service collects and queries audit logs.
 package main
 
 import (
