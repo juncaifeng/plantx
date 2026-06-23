@@ -2,18 +2,35 @@ package app
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/plantx/platform/registry-service/internal/domain"
+	"go.temporal.io/sdk/client"
 )
 
 // Registry implements registry use cases.
 type Registry struct {
-	repo domain.Repository
+	repo         domain.Repository
+	temporalClient client.Client
 }
 
 // NewRegistry creates a new Registry application service.
-func NewRegistry(repo domain.Repository) *Registry {
-	return &Registry{repo: repo}
+func NewRegistry(repo domain.Repository, opts ...RegistryOption) *Registry {
+	r := &Registry{repo: repo}
+	for _, opt := range opts {
+		opt(r)
+	}
+	return r
+}
+
+// RegistryOption configures Registry.
+type RegistryOption func(*Registry)
+
+// WithTemporalClient sets the Temporal client used to trigger lifecycle workflows.
+func WithTemporalClient(c client.Client) RegistryOption {
+	return func(r *Registry) {
+		r.temporalClient = c
+	}
 }
 
 // RegisterApplication registers a new application.
@@ -53,12 +70,44 @@ func (r *Registry) GetApplicationMicroApps(ctx context.Context, applicationID st
 
 // RegisterService registers a backend service.
 func (r *Registry) RegisterService(ctx context.Context, name, grpcHost, restPrefix, applicationID string) (*domain.Service, error) {
-	return r.repo.RegisterService(ctx, name, grpcHost, restPrefix, applicationID)
+	svc, err := r.repo.RegisterService(ctx, name, grpcHost, restPrefix, applicationID)
+	if err != nil {
+		return nil, err
+	}
+	if r.temporalClient != nil {
+		_, _ = r.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("service-lifecycle-%s-registered", name),
+			TaskQueue: "plantx-platform",
+		}, "ServiceLifecycleWorkflow", name, "REGISTERED")
+	}
+	return svc, nil
 }
 
 // DeregisterService removes a service by id.
 func (r *Registry) DeregisterService(ctx context.Context, id string) error {
-	return r.repo.DeregisterService(ctx, id)
+	svc, err := r.repo.GetService(ctx, id)
+	if err != nil {
+		return err
+	}
+	name := ""
+	if svc != nil {
+		name = svc.Name
+	}
+	if err := r.repo.DeregisterService(ctx, id); err != nil {
+		return err
+	}
+	if r.temporalClient != nil && name != "" {
+		_, _ = r.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("service-lifecycle-%s-deregistered", name),
+			TaskQueue: "plantx-platform",
+		}, "ServiceLifecycleWorkflow", name, "DEREGISTERED")
+	}
+	return nil
+}
+
+// UpdateServiceStatus updates the lifecycle status of a service by name.
+func (r *Registry) UpdateServiceStatus(ctx context.Context, name string, status domain.ResourceStatus) (*domain.Service, error) {
+	return r.repo.UpdateServiceStatus(ctx, name, status)
 }
 
 // GetService returns a service by id.

@@ -32,6 +32,18 @@ service RegistryService {
     };
   }
 
+  rpc UpdateServiceStatus(UpdateServiceStatusRequest) returns (Service) {
+    option (google.api.http) = {
+      post: "/api/registry/v1/services/{name}/status"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "registry"
+      resource: "service"
+      operation: "update"
+    };
+  }
+
   rpc GetService(GetServiceRequest) returns (Service) {
     option (google.api.http) = {
       get: "/api/registry/v1/services/{id}"
@@ -337,6 +349,11 @@ message RegisterServiceRequest {
 
 message DeregisterServiceRequest {
   string id = 1;
+}
+
+message UpdateServiceStatusRequest {
+  string name = 1;
+  ResourceStatus status = 2;
 }
 
 message GetServiceRequest {

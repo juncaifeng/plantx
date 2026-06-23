@@ -188,6 +188,21 @@ func (r *PostgresRepo) DeregisterService(ctx context.Context, id string) error {
 	return nil
 }
 
+// UpdateServiceStatus updates the status of a service by name.
+func (r *PostgresRepo) UpdateServiceStatus(ctx context.Context, name string, status domain.ResourceStatus) (*domain.Service, error) {
+	svc, err := r.queries.UpdateServiceStatusByName(ctx, sqlc.UpdateServiceStatusByNameParams{
+		Name:   name,
+		Status: string(status),
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update service status: %w", err)
+	}
+	return r.serviceToDomain(ctx, svc)
+}
+
 // GetService returns a service by ID.
 func (r *PostgresRepo) GetService(ctx context.Context, id string) (*domain.Service, error) {
 	uid, err := uuid.Parse(id)

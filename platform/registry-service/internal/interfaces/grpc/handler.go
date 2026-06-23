@@ -111,6 +111,15 @@ func (h *Handler) DeregisterService(ctx context.Context, req *api.DeregisterServ
 	return &emptypb.Empty{}, nil
 }
 
+// UpdateServiceStatus updates the lifecycle status of a registered service.
+func (h *Handler) UpdateServiceStatus(ctx context.Context, req *api.UpdateServiceStatusRequest) (*api.Service, error) {
+	svc, err := h.registry.UpdateServiceStatus(ctx, req.GetName(), toDomainResourceStatus(req.GetStatus()))
+	if err != nil {
+		return nil, err
+	}
+	return toProtoService(svc), nil
+}
+
 // GetService returns a registered service.
 func (h *Handler) GetService(ctx context.Context, req *api.GetServiceRequest) (*api.Service, error) {
 	svc, err := h.registry.GetService(ctx, req.GetId())

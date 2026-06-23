@@ -18,6 +18,13 @@ SELECT * FROM registry_services WHERE id = $1;
 -- name: GetServiceByName :one
 SELECT * FROM registry_services WHERE name = $1;
 
+-- name: UpdateServiceStatusByName :one
+UPDATE registry_services SET
+    status = $2,
+    updated_at = now()
+WHERE name = $1
+RETURNING *;
+
 -- name: ListServices :many
 SELECT * FROM registry_services ORDER BY created_at;
 

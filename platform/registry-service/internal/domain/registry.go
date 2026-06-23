@@ -102,6 +102,7 @@ type Repository interface {
 	// Services
 	RegisterService(ctx context.Context, name, grpcHost, restPrefix, applicationID string) (*Service, error)
 	DeregisterService(ctx context.Context, id string) error
+	UpdateServiceStatus(ctx context.Context, name string, status ResourceStatus) (*Service, error)
 	GetService(ctx context.Context, id string) (*Service, error)
 	ListServices(ctx context.Context) ([]*Service, error)
 
