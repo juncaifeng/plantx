@@ -454,53 +454,99 @@ Portal 登录
 
 ## 11. CI/CD 流程
 
-### 11.1 服务契约变更流水线
+仓库 CI/CD 定义在 `.github/workflows/` 下，核心工作流如下。
 
-```yaml
-name: Kit Contract Pipeline
-on:
-  push:
-    paths:
-      - 'services/**/api/*.proto'
-      - 'platform/**/api/*.proto'
-      - 'proto/plantx/kit/*.proto'
+### 11.1 `CI`
 
-jobs:
-  validate:
-    steps:
-      - buf lint
-      - buf breaking --against main
+文件：`.github/workflows/ci.yml`
 
-  generate:
-    steps:
-      - buf generate
-      - 生成 OpenAPI
-      - 生成 TS SDK
-      - 生成 Go SDK（可选）
+触发条件：`push` 到 `main` / `release/*`、`pull_request`、标签 `v*`。
 
-  publish:
-    steps:
-      - 发布 @plantx/kit-sdk-api/*
-      - 推送 OpenAPI 到 registry-service
-      - 提交生成代码 PR（如需要）
-```
+任务：
 
-### 11.2 服务构建流水线
+1. **generate**
+   - 安装 `protoc`、`protoc-gen-go`、`protoc-gen-go-grpc`、`protoc-gen-grpc-gateway`、`sqlc`。
+   - 执行 `pnpm install` 与 `bash scripts/generate.sh`，统一生成 proto / sqlc / SDK / OpenAPI 代码。
+   - 将生成产物打包为 `generated-artifacts` artifact，供下游 job 下载，避免每个 job 重复生成。
 
-```yaml
-name: Service Build
-on:
-  push:
-    paths:
-      - 'services/order/**'
+2. **lint-go**（依赖 generate）
+   - 下载生成产物。
+   - 安装 `golangci-lint`。
+   - 遍历 `go.work` 中的每个主 module 执行 `golangci-lint run ./...`。
+   - 当前 `.golangci.yml` 启用：`gosimple`、`govet`、`ineffassign`、`staticcheck`（排除 SA1019）、`unused`、`gofmt`、`goimports`、`misspell`；禁用 `errcheck`、`revive` 以及生成目录 `api`、`sqlc`、`gen`、`vendor`。
 
-jobs:
-  build:
-    steps:
-      - 执行 sqlc generate
-      - go test ./...
-      - docker build
-      - 推送镜像
+3. **test-go**（依赖 generate）
+   - 下载生成产物。
+   - 执行 `go test ./kit/kit-go/... ./kit/kit-go/gateway/... ./services/order/... ./kit/kit-cli/...`。
+
+4. **lint-web**（依赖 generate）
+   - 下载生成产物。
+   - 构建 `kit/*` SDK 包，执行 `pnpm lint` 与 `pnpm typecheck`。
+
+5. **build-images**（依赖 lint-go / test-go / lint-web）
+   - 下载生成产物。
+   - 使用仓库根目录作为 Docker build context，构建 `services/order/Dockerfile`：
+     ```bash
+     docker build -f services/order/Dockerfile -t plantx/order-service:${{ github.sha }} .
+     ```
+   - Dockerfile 中设置 `GOWORK=off`，仅复制必要 module 源码，避免 workspace 全量依赖问题。
+
+6. **publish-images**（依赖 build-images，仅在 `v*` 标签触发）
+   - 登录 `ghcr.io`。
+   - 构建并推送 `ghcr.io/plantx/order-service:<VERSION>` 与 `latest`。
+
+### 11.2 `Generate Check`
+
+文件：`.github/workflows/generate-check.yml`
+
+- 在 `push` / `pull_request` 时运行 `scripts/generate.sh`。
+- 检查生成后的代码是否与仓库一致（`git diff --exit-code`），防止提交者漏提生成产物。
+
+### 11.3 `Generate SDK`
+
+文件：`.github/workflows/generate-sdk.yml`
+
+- 当 `proto/**`、`platform/**/migrations/**`、`scripts/generate.sh` 或本 workflow 变更时触发。
+- 运行生成器后通过 `peter-evans/create-pull-request` 自动创建 `chore/regenerate-sdk` PR。
+
+### 11.4 `Release SDK`
+
+文件：`.github/workflows/release-sdk.yml`
+
+- 使用 Changesets 管理版本。
+- 当存在 changeset 时创建 Release PR；无 changeset 时直接发布所有未发布的 package。
+- 发布脚本：`pnpm ci:publish` → `pnpm -r --filter './kit/**' exec npm publish --access public`。
+- 目标 registry：`https://registry.npmjs.org`。
+- 必需 secret：`NPM_TOKEN`（需为 Granular Access Token，带 `@plantx` scope 的 publish 权限并启用 **Bypass 2FA**）。
+
+### 11.5 `Commitlint`
+
+文件：`.github/workflows/commitlint.yml`
+
+- 检查最近一次的 commit message 是否符合 conventional commit 规范。
+- 使用仓库本地安装的 `@commitlint/cli` 与 `@commitlint/config-conventional`。
+
+### 11.6 本地常用命令
+
+```bash
+# 安装依赖
+pnpm install
+
+# 生成所有代码（proto / sqlc / SDK / OpenAPI）
+bash scripts/generate.sh
+
+# 构建 kit SDK
+pnpm -r --filter './kit/**' run build
+
+# 前端 lint / typecheck
+pnpm lint
+pnpm typecheck
+
+# Go 测试
+go test ./kit/kit-go/... ./kit/kit-go/gateway/... ./services/order/... ./kit/kit-cli/...
+
+# 构建 order-service 镜像（仓库根目录执行）
+docker build -f services/order/Dockerfile -t plantx/order-service:latest .
 ```
 
 ---
@@ -524,7 +570,7 @@ jobs:
 
 - [x] 配置 buf openapi 生成插件，输出归一化到 `openapi/<service-short>.yaml`
 - [x] 建立 `kit/kit-sdk-api/<svc>` 模块（iam / tenant / gateway / audit / registry）并配置 subpath exports
-- [x] CI/CD 自动生成并发布 SDK（`release-sdk.yml` 通过 changesets 自动版本/发布到 GitHub Packages npm registry）
+- [x] CI/CD 自动生成并发布 SDK（`release-sdk.yml` 通过 changesets 自动版本/发布到 npmjs.org 的 `@plantx` scope）
 - [x] 平台 admin UI 与 Portal 已迁移到 `@plantx/kit-sdk-api/<svc>` 调用
 
 ### Phase 4：Admin 控制台
@@ -569,5 +615,5 @@ jobs:
 
 ---
 
-*版本：1.1*
-*最后更新：2026-06-22*
+*版本：1.2*
+*最后更新：2026-06-23*
