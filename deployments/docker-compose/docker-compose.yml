@@ -108,6 +108,9 @@ services:
       - portal
       - demo-service
       - demo-ui
+    networks:
+      - default
+      - plantx
 
   order-service:
     build:
@@ -269,8 +272,13 @@ services:
       context: ../../demo_app/frontend
       dockerfile: Dockerfile
     container_name: docker-compose-demo-ui-1
+    networks:
+      - plantx
     restart: unless-stopped
 
 volumes:
   postgres_data:
   mock_auth_data:
+
+networks:
+  plantx:
