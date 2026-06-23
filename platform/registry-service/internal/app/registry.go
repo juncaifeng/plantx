@@ -68,6 +68,22 @@ func (r *Registry) GetApplicationMicroApps(ctx context.Context, applicationID st
 	return r.repo.GetApplicationMicroApps(ctx, applicationID)
 }
 
+// serviceLifecycleInput mirrors platform/temporal-worker/internal/workflows.ServiceLifecycleInput
+// so we can start the workflow without importing the worker module.
+type serviceLifecycleInput struct {
+	ServiceName   string   `json:"serviceName"`
+	Event         string   `json:"event"`
+	MicroAppNames []string `json:"microAppNames"`
+}
+
+func microAppNames(svc *domain.Service) []string {
+	names := make([]string, 0, len(svc.MicroApps))
+	for _, m := range svc.MicroApps {
+		names = append(names, m.Name)
+	}
+	return names
+}
+
 // RegisterService registers a backend service.
 func (r *Registry) RegisterService(ctx context.Context, name, grpcHost, restPrefix, applicationID string) (*domain.Service, error) {
 	svc, err := r.repo.RegisterService(ctx, name, grpcHost, restPrefix, applicationID)
@@ -78,31 +94,44 @@ func (r *Registry) RegisterService(ctx context.Context, name, grpcHost, restPref
 		_, _ = r.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 			ID:        fmt.Sprintf("service-lifecycle-%s-registered", name),
 			TaskQueue: "plantx-platform",
-		}, "ServiceLifecycleWorkflow", name, "REGISTERED")
+		}, "ServiceLifecycleWorkflow", serviceLifecycleInput{
+			ServiceName:   name,
+			Event:         "REGISTERED",
+			MicroAppNames: microAppNames(svc),
+		})
 	}
 	return svc, nil
 }
 
-// DeregisterService removes a service by id.
+// DeregisterService removes a service by id and cascades the offline status to
+// related menus and micro-apps via the Temporal workflow.
 func (r *Registry) DeregisterService(ctx context.Context, id string) error {
 	svc, err := r.repo.GetService(ctx, id)
 	if err != nil {
 		return err
 	}
 	name := ""
+	var names []string
 	if svc != nil {
 		name = svc.Name
+		names = microAppNames(svc)
 	}
-	if err := r.repo.DeregisterService(ctx, id); err != nil {
-		return err
-	}
+
+	// Trigger the cascade workflow BEFORE deleting the service row so the worker
+	// has a chance to act on registry state. The workflow receives the micro-app
+	// names explicitly so it can still find related menus after the service is gone.
 	if r.temporalClient != nil && name != "" {
 		_, _ = r.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 			ID:        fmt.Sprintf("service-lifecycle-%s-deregistered", name),
 			TaskQueue: "plantx-platform",
-		}, "ServiceLifecycleWorkflow", name, "DEREGISTERED")
+		}, "ServiceLifecycleWorkflow", serviceLifecycleInput{
+			ServiceName:   name,
+			Event:         "DEREGISTERED",
+			MicroAppNames: names,
+		})
 	}
-	return nil
+
+	return r.repo.DeregisterService(ctx, id)
 }
 
 // UpdateServiceStatus updates the lifecycle status of a service by name.

@@ -200,6 +200,7 @@ func (h *Handler) CreateMenu(ctx context.Context, req *api.CreateMenuRequest) (*
 		MicroAppName:      req.GetMicroAppName(),
 		RequirePermission: req.GetRequirePermission(),
 		ApplicationId:     req.GetApplicationId(),
+		Status:            req.GetStatus(),
 	}))
 	if err != nil {
 		return nil, err
@@ -232,6 +233,7 @@ func (h *Handler) UpdateMenu(ctx context.Context, req *api.UpdateMenuRequest) (*
 		MicroAppName:      req.GetMicroAppName(),
 		RequirePermission: req.GetRequirePermission(),
 		ApplicationId:     req.GetApplicationId(),
+		Status:            req.GetStatus(),
 	}))
 	if err != nil {
 		return nil, err

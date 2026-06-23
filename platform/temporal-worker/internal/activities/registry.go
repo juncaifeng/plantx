@@ -50,18 +50,31 @@ func (a *RegistryActivities) serviceMicroAppNames(ctx context.Context, serviceNa
 	return names, nil
 }
 
+// toNameSet builds a set of micro-app names from the explicit list, falling back
+// to querying the registry when the list is empty.
+func (a *RegistryActivities) toNameSet(ctx context.Context, serviceName string, microAppNames []string) (map[string]struct{}, error) {
+	names := make(map[string]struct{}, len(microAppNames))
+	for _, n := range microAppNames {
+		names[n] = struct{}{}
+	}
+	if len(names) > 0 {
+		return names, nil
+	}
+	return a.serviceMicroAppNames(ctx, serviceName)
+}
+
 // PublishServiceMenus sets all menus belonging to a service to ONLINE.
-func (a *RegistryActivities) PublishServiceMenus(ctx context.Context, serviceName string) error {
-	return a.updateServiceMenus(ctx, serviceName, registryapi.ResourceStatus_RESOURCE_STATUS_ONLINE)
+func (a *RegistryActivities) PublishServiceMenus(ctx context.Context, serviceName string, microAppNames []string) error {
+	return a.updateServiceMenus(ctx, serviceName, microAppNames, registryapi.ResourceStatus_RESOURCE_STATUS_ONLINE)
 }
 
 // UnpublishServiceMenus sets all menus belonging to a service to OFFLINE.
-func (a *RegistryActivities) UnpublishServiceMenus(ctx context.Context, serviceName string) error {
-	return a.updateServiceMenus(ctx, serviceName, registryapi.ResourceStatus_RESOURCE_STATUS_OFFLINE)
+func (a *RegistryActivities) UnpublishServiceMenus(ctx context.Context, serviceName string, microAppNames []string) error {
+	return a.updateServiceMenus(ctx, serviceName, microAppNames, registryapi.ResourceStatus_RESOURCE_STATUS_OFFLINE)
 }
 
-func (a *RegistryActivities) updateServiceMenus(ctx context.Context, serviceName string, status registryapi.ResourceStatus) error {
-	names, err := a.serviceMicroAppNames(ctx, serviceName)
+func (a *RegistryActivities) updateServiceMenus(ctx context.Context, serviceName string, microAppNames []string, status registryapi.ResourceStatus) error {
+	names, err := a.toNameSet(ctx, serviceName, microAppNames)
 	if err != nil {
 		return err
 	}
@@ -108,39 +121,39 @@ func (a *RegistryActivities) updateServiceMenus(ctx context.Context, serviceName
 }
 
 // PublishServiceMicroApps sets all micro-apps belonging to a service to ONLINE.
-func (a *RegistryActivities) PublishServiceMicroApps(ctx context.Context, serviceName string) error {
-	return a.updateServiceMicroApps(ctx, serviceName, registryapi.ResourceStatus_RESOURCE_STATUS_ONLINE)
+func (a *RegistryActivities) PublishServiceMicroApps(ctx context.Context, serviceName string, microAppNames []string) error {
+	return a.updateServiceMicroApps(ctx, serviceName, microAppNames, registryapi.ResourceStatus_RESOURCE_STATUS_ONLINE)
 }
 
 // UnpublishServiceMicroApps sets all micro-apps belonging to a service to OFFLINE.
-func (a *RegistryActivities) UnpublishServiceMicroApps(ctx context.Context, serviceName string) error {
-	return a.updateServiceMicroApps(ctx, serviceName, registryapi.ResourceStatus_RESOURCE_STATUS_OFFLINE)
+func (a *RegistryActivities) UnpublishServiceMicroApps(ctx context.Context, serviceName string, microAppNames []string) error {
+	return a.updateServiceMicroApps(ctx, serviceName, microAppNames, registryapi.ResourceStatus_RESOURCE_STATUS_OFFLINE)
 }
 
-func (a *RegistryActivities) updateServiceMicroApps(ctx context.Context, serviceName string, status registryapi.ResourceStatus) error {
+func (a *RegistryActivities) updateServiceMicroApps(ctx context.Context, serviceName string, microAppNames []string, status registryapi.ResourceStatus) error {
+	names, err := a.toNameSet(ctx, serviceName, microAppNames)
+	if err != nil {
+		return err
+	}
+	if len(names) == 0 {
+		return nil
+	}
+
 	c, cleanup, err := a.client(ctx)
 	if err != nil {
 		return err
 	}
 	defer cleanup()
 
-	resp, err := c.ListServices(ctx, &registryapi.ListServicesRequest{})
+	resp, err := c.ListMicroApps(ctx, &registryapi.ListMicroAppsRequest{})
 	if err != nil {
-		return fmt.Errorf("list services: %w", err)
+		return fmt.Errorf("list micro-apps: %w", err)
 	}
 
-	var target *registryapi.Service
-	for _, svc := range resp.GetServices() {
-		if svc.GetName() == serviceName {
-			target = svc
-			break
+	for _, m := range resp.GetMicroApps() {
+		if _, ok := names[m.GetName()]; !ok {
+			continue
 		}
-	}
-	if target == nil {
-		return nil
-	}
-
-	for _, m := range target.GetMicroApps() {
 		if m.GetStatus() == status {
 			continue
 		}

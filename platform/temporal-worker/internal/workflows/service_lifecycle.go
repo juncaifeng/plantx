@@ -21,8 +21,17 @@ const (
 	ServiceHealthy LifecycleEvent = "HEALTHY"
 )
 
+// ServiceLifecycleInput is the workflow input for ServiceLifecycleWorkflow.
+// It is intentionally JSON-tagged so callers (e.g. registry-service) can pass
+// a matching anonymous struct without importing this package.
+type ServiceLifecycleInput struct {
+	ServiceName   string         `json:"serviceName"`
+	Event         LifecycleEvent `json:"event"`
+	MicroAppNames []string       `json:"microAppNames"`
+}
+
 // ServiceLifecycleWorkflow orchestrates lifecycle changes for a registered service.
-func ServiceLifecycleWorkflow(ctx workflow.Context, serviceName string, event LifecycleEvent) error {
+func ServiceLifecycleWorkflow(ctx workflow.Context, input ServiceLifecycleInput) error {
 	ao := workflow.ActivityOptions{
 		StartToCloseTimeout: 30 * time.Second,
 		RetryPolicy: &temporal.RetryPolicy{
@@ -33,28 +42,38 @@ func ServiceLifecycleWorkflow(ctx workflow.Context, serviceName string, event Li
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
-	switch event {
+	switch input.Event {
 	case ServiceRegistered, ServiceHealthy:
-		if err := workflow.ExecuteActivity(ctx, "SetServiceStatus", serviceName, "ONLINE").Get(ctx, nil); err != nil {
+		if err := workflow.ExecuteActivity(ctx, "SetServiceStatus", input.ServiceName, "ONLINE").Get(ctx, nil); err != nil {
 			return err
 		}
-		if err := workflow.ExecuteActivity(ctx, "PublishServiceMenus", serviceName).Get(ctx, nil); err != nil {
+		if err := workflow.ExecuteActivity(ctx, "PublishServiceMenus", input.ServiceName, input.MicroAppNames).Get(ctx, nil); err != nil {
 			return err
 		}
-		if err := workflow.ExecuteActivity(ctx, "PublishServiceMicroApps", serviceName).Get(ctx, nil); err != nil {
+		if err := workflow.ExecuteActivity(ctx, "PublishServiceMicroApps", input.ServiceName, input.MicroAppNames).Get(ctx, nil); err != nil {
 			return err
 		}
-	case ServiceDeregistered, ServiceUnhealthy:
-		if err := workflow.ExecuteActivity(ctx, "UnpublishServiceMenus", serviceName).Get(ctx, nil); err != nil {
+	case ServiceUnhealthy:
+		if err := workflow.ExecuteActivity(ctx, "SetServiceStatus", input.ServiceName, "OFFLINE").Get(ctx, nil); err != nil {
 			return err
 		}
-		if err := workflow.ExecuteActivity(ctx, "UnpublishServiceMicroApps", serviceName).Get(ctx, nil); err != nil {
+		if err := workflow.ExecuteActivity(ctx, "UnpublishServiceMenus", input.ServiceName, input.MicroAppNames).Get(ctx, nil); err != nil {
 			return err
 		}
-		if err := workflow.ExecuteActivity(ctx, "SetServiceStatus", serviceName, "OFFLINE").Get(ctx, nil); err != nil {
+		if err := workflow.ExecuteActivity(ctx, "UnpublishServiceMicroApps", input.ServiceName, input.MicroAppNames).Get(ctx, nil); err != nil {
+			return err
+		}
+	case ServiceDeregistered:
+		// The service row is deleted by the registry-service immediately after
+		// triggering this workflow, so we only cascade the offline status to
+		// related menus and micro-apps. We intentionally skip SetServiceStatus.
+		if err := workflow.ExecuteActivity(ctx, "UnpublishServiceMenus", input.ServiceName, input.MicroAppNames).Get(ctx, nil); err != nil {
+			return err
+		}
+		if err := workflow.ExecuteActivity(ctx, "UnpublishServiceMicroApps", input.ServiceName, input.MicroAppNames).Get(ctx, nil); err != nil {
 			return err
 		}
 	}
 
-	return workflow.ExecuteActivity(ctx, "WriteAuditLog", serviceName, string(event)).Get(ctx, nil)
+	return workflow.ExecuteActivity(ctx, "WriteAuditLog", input.ServiceName, string(input.Event)).Get(ctx, nil)
 }

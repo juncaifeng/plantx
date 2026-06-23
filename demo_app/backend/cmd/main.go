@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	stdlog "log"
 	"os"
 	"os/signal"
@@ -184,7 +185,26 @@ func seedDemoMenus(stdLogger *stdlog.Logger) error {
 		{labelKey: "nav.demo.system", route: "/demo/system", icon: "ToolOutlined", perm: "setting:admin"},
 	}
 
+	// Build a set of existing menus to avoid duplicates across restarts.
+	existingResp, err := client.ListMenus(ctx, &registryapi.ListMenusRequest{})
+	if err != nil {
+		return fmt.Errorf("list menus: %w", err)
+	}
+	existing := make(map[string]struct{})
+	for _, menu := range existingResp.GetMenus() {
+		if menu.GetApplicationId() != appID {
+			continue
+		}
+		key := menu.GetLabelKey() + "|" + menu.GetRoute()
+		existing[key] = struct{}{}
+	}
+
 	for _, m := range menus {
+		key := m.labelKey + "|" + m.route
+		if _, ok := existing[key]; ok {
+			stdLogger.Printf("menu %s already exists, skipping", m.labelKey)
+			continue
+		}
 		_, err := client.CreateMenu(ctx, &registryapi.CreateMenuRequest{
 			LabelKey:          m.labelKey,
 			Route:             m.route,
