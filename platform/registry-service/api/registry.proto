@@ -278,6 +278,15 @@ enum ApplicationStatus {
   APPLICATION_STATUS_OFFLINE = 2;
 }
 
+enum ResourceStatus {
+  RESOURCE_STATUS_UNSPECIFIED = 0;
+  RESOURCE_STATUS_DRAFT = 1;
+  RESOURCE_STATUS_PENDING = 2;
+  RESOURCE_STATUS_ONLINE = 3;
+  RESOURCE_STATUS_OFFLINE = 4;
+  RESOURCE_STATUS_UPDATING = 5;
+}
+
 message Application {
   string id = 1;
   string key = 2;
@@ -298,6 +307,7 @@ message Service {
   repeated MicroApp micro_apps = 6;
   string application_id = 7;
   string application_key = 8;
+  ResourceStatus status = 9;
 }
 
 message Route {
@@ -314,6 +324,7 @@ message MicroApp {
   string application_id = 6;
   string application_key = 7;
   string upstream = 8;
+  ResourceStatus status = 9;
 }
 
 message RegisterServiceRequest {
@@ -375,6 +386,7 @@ message Menu {
   string require_permission = 8;
   string application_id = 9;
   string application_key = 10;
+  ResourceStatus status = 11;
 }
 
 message CreateMenuRequest {
@@ -387,6 +399,7 @@ message CreateMenuRequest {
   string require_permission = 7;
   string application_id = 8;
   string application_key = 9;
+  ResourceStatus status = 10;
 }
 
 message ListMenusRequest {}
@@ -402,6 +415,7 @@ message UpdateMenuRequest {
   string require_permission = 8;
   string application_id = 9;
   string application_key = 10;
+  ResourceStatus status = 11;
 }
 
 message DeleteMenuRequest {
