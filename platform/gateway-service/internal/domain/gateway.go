@@ -1,3 +1,4 @@
+// Package domain contains the gateway-service domain models and repository interfaces.
 package domain
 
 import "context"

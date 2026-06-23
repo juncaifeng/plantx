@@ -1,3 +1,4 @@
+// Package registry provides a registry-service client for the gateway.
 package registry
 
 import (

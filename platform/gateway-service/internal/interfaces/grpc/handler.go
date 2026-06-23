@@ -1,3 +1,4 @@
+// Package grpc implements the gateway-service gRPC handlers.
 package grpc
 
 import (
@@ -29,7 +30,7 @@ func (h *Handler) RegisterService(ctx context.Context, req *api.RegisterServiceR
 }
 
 // ListServices lists registered services.
-func (h *Handler) ListServices(ctx context.Context, req *api.ListServicesRequest) (*api.ServiceList, error) {
+func (h *Handler) ListServices(ctx context.Context, _ *api.ListServicesRequest) (*api.ServiceList, error) {
 	services, err := h.registry.ListServices(ctx)
 	if err != nil {
 		return nil, err
@@ -67,7 +68,7 @@ func (h *Handler) RegisterMicroApp(ctx context.Context, req *api.RegisterMicroAp
 }
 
 // ListMicroApps lists registered micro-app manifests.
-func (h *Handler) ListMicroApps(ctx context.Context, req *api.ListMicroAppsRequest) (*api.MicroAppList, error) {
+func (h *Handler) ListMicroApps(ctx context.Context, _ *api.ListMicroAppsRequest) (*api.MicroAppList, error) {
 	apps, err := h.registry.ListMicroApps(ctx)
 	if err != nil {
 		return nil, err

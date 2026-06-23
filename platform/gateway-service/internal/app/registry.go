@@ -1,3 +1,4 @@
+// Package app implements the gateway-service use cases.
 package app
 
 import (

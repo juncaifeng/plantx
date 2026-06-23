@@ -101,7 +101,7 @@ func main() {
 		logger.Error("failed to connect to registry-service", kitlog.F("error", err))
 		os.Exit(1)
 	}
-	defer repository.Close()
+	defer func() { _ = repository.Close() }()
 
 	reg := app.NewRegistry(repository)
 	handler := grpcsrv.NewHandler(reg)
