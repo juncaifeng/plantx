@@ -50,3 +50,4 @@ mock-auth.exe
 .playwright/
 .playwright-cli/
 .playwright-mcp/
+.agents/

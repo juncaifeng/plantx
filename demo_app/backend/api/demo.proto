@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package plantx.demo.v1;
+
+option go_package = "github.com/plantx/demo_app/backend/api";
+
+import "google/api/annotations.proto";
+import "plantx/kit/authz.proto";
+
+service DemoService {
+  // Items: basic CRUD for demonstrating RBAC.
+  rpc CreateItem(CreateItemRequest) returns (Item) {
+    option (google.api.http) = {
+      post: "/api/demo/v1/items"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "item"
+      operation: "create"
+    };
+  }
+
+  rpc ListItems(ListItemsRequest) returns (ItemList) {
+    option (google.api.http) = {
+      get: "/api/demo/v1/items"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "item"
+      operation: "list"
+    };
+  }
+
+  // Settings: configuration management demonstrating RBAC + ABAC.
+  // RBAC: roles grant setting:list/read/create/update/delete.
+  // ABAC: the backend enforces scope rules based on tenant attributes
+  //        (global settings editable only by platform admins, tenant
+  //        settings editable by tenant admins within their own tenant).
+  rpc CreateSetting(CreateSettingRequest) returns (Setting) {
+    option (google.api.http) = {
+      post: "/api/demo/v1/settings"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "setting"
+      operation: "create"
+    };
+  }
+
+  rpc GetSetting(GetSettingRequest) returns (Setting) {
+    option (google.api.http) = {
+      get: "/api/demo/v1/settings/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "setting"
+      operation: "read"
+    };
+  }
+
+  rpc ListSettings(ListSettingsRequest) returns (SettingList) {
+    option (google.api.http) = {
+      get: "/api/demo/v1/settings"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "setting"
+      operation: "list"
+    };
+  }
+
+  rpc UpdateSetting(UpdateSettingRequest) returns (Setting) {
+    option (google.api.http) = {
+      put: "/api/demo/v1/settings/{id}"
+      body: "*"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "setting"
+      operation: "update"
+    };
+  }
+
+  rpc DeleteSetting(DeleteSettingRequest) returns (Setting) {
+    option (google.api.http) = {
+      delete: "/api/demo/v1/settings/{id}"
+    };
+    option (plantx.kit.authz.action) = {
+      service: "demo"
+      resource: "setting"
+      operation: "delete"
+    };
+  }
+}
+
+message Item {
+  string id = 1;
+  string tenant_id = 2;
+  string title = 3;
+  int64 created_at = 4;
+}
+
+message CreateItemRequest {
+  string title = 1;
+}
+
+message ListItemsRequest {}
+
+message ItemList {
+  repeated Item items = 1;
+}
+
+enum SettingScope {
+  SETTING_SCOPE_UNSPECIFIED = 0;
+  SETTING_SCOPE_GLOBAL = 1;
+  SETTING_SCOPE_TENANT = 2;
+}
+
+message Setting {
+  string id = 1;
+  string tenant_id = 2;
+  string key = 3;
+  string value = 4;
+  SettingScope scope = 5;
+  string updated_by = 6;
+  int64 updated_at = 7;
+}
+
+message CreateSettingRequest {
+  string key = 1;
+  string value = 2;
+  SettingScope scope = 3;
+}
+
+message GetSettingRequest {
+  string id = 1;
+}
+
+message ListSettingsRequest {}
+
+message SettingList {
+  repeated Setting settings = 1;
+}
+
+message UpdateSettingRequest {
+  string id = 1;
+  string value = 2;
+}
+
+message DeleteSettingRequest {
+  string id = 1;
+}

@@ -1,7 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import type { KitApiClient } from '@plantx/kit-sdk-api';
 
-
 export interface KitUser {
   id: string;
   username?: string;
@@ -59,7 +58,7 @@ export interface MicroAppManifest {
   requirePermission?: string;
 }
 
-export function useMicroApps(manifests: MicroAppManifest[]): MicroAppManifest[] {
-  // Static manifest for now; reserved for future server-side discovery.
-  return manifests;
-}
+export { useRegistryClient } from './useRegistryClient.js';
+export { useApplications, isApplicationActive, type UseApplicationsResult } from './useApplications.js';
+export { useMenus, type UseMenusOptions, type UseMenusResult } from './useMenus.js';
+export { useMicroApps, type UseMicroAppsOptions, type UseMicroAppsResult } from './useMicroApps.js';

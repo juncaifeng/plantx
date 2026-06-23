@@ -1,6 +1,7 @@
 go 1.24.2
 
 use (
+	./demo_app/backend
 	./deployments/docker-compose/mock-auth
 	./kit/kit-cli
 	./kit/kit-go

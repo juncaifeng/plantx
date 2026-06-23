@@ -3,5 +3,6 @@ packages:
   - "kit/kit-sdk-api"
   - "kit/kit-sdk-kit"
   - "apps/portal"
+  - "demo_app/frontend"
   - "services/*/web/*"
   - "platform/*/web/*"
