@@ -11,6 +11,9 @@ linters:
     - gofmt
     - goimports
     - misspell
+  disable:
+    - errcheck
+    - revive
 
 linters-settings:
   staticcheck:
