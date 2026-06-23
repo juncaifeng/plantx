@@ -1,10 +1,11 @@
 -- name: UpsertService :one
-INSERT INTO registry_services (name, grpc_host, rest_prefix, application_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO registry_services (name, grpc_host, rest_prefix, application_id, status)
+VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (name) DO UPDATE SET
     grpc_host = EXCLUDED.grpc_host,
     rest_prefix = EXCLUDED.rest_prefix,
     application_id = EXCLUDED.application_id,
+    status = EXCLUDED.status,
     updated_at = now()
 RETURNING *;
 
@@ -29,8 +30,9 @@ INSERT INTO micro_apps (
     menu_label_key,
     require_permission,
     application_id,
-    upstream
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    upstream,
+    status
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 ON CONFLICT (service_id, name) DO UPDATE SET
     route = EXCLUDED.route,
     bundle_url = EXCLUDED.bundle_url,
@@ -38,6 +40,7 @@ ON CONFLICT (service_id, name) DO UPDATE SET
     require_permission = EXCLUDED.require_permission,
     application_id = EXCLUDED.application_id,
     upstream = EXCLUDED.upstream,
+    status = EXCLUDED.status,
     updated_at = now()
 RETURNING *;
 
@@ -57,6 +60,7 @@ UPDATE micro_apps SET
     menu_label_key = $4,
     require_permission = $5,
     upstream = $6,
+    status = $7,
     updated_at = now()
 WHERE name = $1
 RETURNING *;
@@ -73,8 +77,9 @@ INSERT INTO menus (
     sort_order,
     micro_app_name,
     require_permission,
-    application_id
-) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    application_id,
+    status
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;
 
 -- name: ListMenus :many
@@ -96,6 +101,7 @@ UPDATE menus SET
     micro_app_name = $7,
     require_permission = $8,
     application_id = $9,
+    status = $10,
     updated_at = now()
 WHERE id = $1
 RETURNING *;
