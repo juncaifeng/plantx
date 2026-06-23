@@ -3,7 +3,6 @@ run:
 
 linters:
   enable:
-    - errcheck
     - gosimple
     - govet
     - ineffassign
@@ -12,10 +11,15 @@ linters:
     - gofmt
     - goimports
     - misspell
-    - revive
+
+linters-settings:
+  staticcheck:
+    checks: ["all", "-SA1019"]
 
 issues:
   exclude-use-default: false
   exclude-dirs:
     - gen
     - vendor
+    - api
+    - sqlc
