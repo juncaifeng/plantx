@@ -276,6 +276,35 @@ services:
       - plantx
     restart: unless-stopped
 
+  temporal-server:
+    image: temporalio/auto-setup:1.22
+    container_name: docker-compose-temporal-server-1
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=plantx
+      - POSTGRES_PWD=plantx
+      - POSTGRES_SEEDS=postgres
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - plantx
+
+  temporal-ui:
+    image: temporalio/ui:2.21
+    container_name: docker-compose-temporal-ui-1
+    environment:
+      - TEMPORAL_ADDRESS=temporal-server:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    ports:
+      - "8083:8080"
+    depends_on:
+      - temporal-server
+    networks:
+      - plantx
+
 volumes:
   postgres_data:
   mock_auth_data:
