@@ -297,7 +297,6 @@ services:
     - POSTGRES_USER=plantx
     - POSTGRES_PWD=plantx
     - POSTGRES_SEEDS=postgres
-    - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
     depends_on:
       postgres:
         condition: service_healthy
