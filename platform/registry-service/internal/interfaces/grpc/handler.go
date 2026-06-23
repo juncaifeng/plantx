@@ -163,6 +163,7 @@ func (h *Handler) UpdateMicroApp(ctx context.Context, req *api.UpdateMicroAppReq
 		BundleUrl:         req.GetBundleUrl(),
 		MenuLabelKey:      req.GetMenuLabelKey(),
 		RequirePermission: req.GetRequirePermission(),
+		Upstream:          req.GetUpstream(),
 	}, ""))
 	if err != nil {
 		return nil, err
@@ -392,6 +393,7 @@ func toDomainMicroApp(m *api.MicroApp, applicationID string) *domain.MicroApp {
 		MenuLabelKey:      m.GetMenuLabelKey(),
 		RequirePermission: m.GetRequirePermission(),
 		ApplicationID:     appID,
+		Upstream:          m.GetUpstream(),
 	}
 }
 
@@ -407,6 +409,7 @@ func toProtoMicroApp(m *domain.MicroApp) *api.MicroApp {
 		RequirePermission: m.RequirePermission,
 		ApplicationId:     m.ApplicationID,
 		ApplicationKey:    m.ApplicationKey,
+		Upstream:          m.Upstream,
 	}
 }
 
