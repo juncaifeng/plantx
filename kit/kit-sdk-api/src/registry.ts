@@ -1,12 +1,12 @@
 import type { KitApiClient } from './index.js';
 
 export type ResourceStatus =
-  | 'UNSPECIFIED'
-  | 'DRAFT'
-  | 'PENDING'
-  | 'ONLINE'
-  | 'OFFLINE'
-  | 'UPDATING';
+  | 'RESOURCE_STATUS_UNSPECIFIED'
+  | 'RESOURCE_STATUS_DRAFT'
+  | 'RESOURCE_STATUS_PENDING'
+  | 'RESOURCE_STATUS_ONLINE'
+  | 'RESOURCE_STATUS_OFFLINE'
+  | 'RESOURCE_STATUS_UPDATING';
 
 export interface Route {
   path: string;
@@ -109,6 +109,7 @@ export interface CreateMenuRequest {
   requirePermission?: string;
   applicationId?: string;
   applicationKey?: string;
+  status?: ResourceStatus;
 }
 
 export interface UpdateMenuRequest {
@@ -122,6 +123,7 @@ export interface UpdateMenuRequest {
   requirePermission?: string;
   applicationId?: string;
   applicationKey?: string;
+  status?: ResourceStatus;
 }
 
 export interface DeleteMenuRequest {
