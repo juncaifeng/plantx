@@ -1,3 +1,4 @@
+// Package app implements the audit-service use cases.
 package app
 
 import (

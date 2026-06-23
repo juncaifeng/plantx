@@ -49,7 +49,7 @@ func main() {
 			eventBus = b
 		}
 	}
-	defer eventBus.Close()
+	defer func() { _ = eventBus.Close() }()
 
 	repository := repo.NewInMemoryRepo()
 	auditApp := app.NewAuditService(repository)

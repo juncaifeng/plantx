@@ -1,3 +1,4 @@
+// Package domain contains the audit-service domain models.
 package domain
 
 import "time"

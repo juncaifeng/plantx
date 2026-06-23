@@ -1,3 +1,4 @@
+// Package repo provides audit-service repository implementations.
 package repo
 
 import (
