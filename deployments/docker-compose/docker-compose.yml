@@ -1,5 +1,4 @@
-version: "3.8"
-
+version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,54 +7,58 @@ services:
       POSTGRES_PASSWORD: plantx
       POSTGRES_DB: plantx
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+    - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+    - 5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U plantx"]
+      test:
+      - CMD-SHELL
+      - pg_isready -U plantx
       interval: 5s
       timeout: 5s
       retries: 5
-
+    networks:
+    - plantx
   nats:
     image: nats:2.10
-    command: "-js"
+    command: -js
     ports:
-      - "4222:4222"
-      - "8222:8222"
-
-  # MaxKey is the chosen production IAM; for local development we use a lightweight mock OIDC provider.
-  # To use MaxKey instead, replace the mock-auth service with the maxkey image and add a MySQL/Postgres config.
+    - 4222:4222
+    - 8222:8222
+    networks:
+    - plantx
   mock-auth:
     build:
       context: ../../deployments/docker-compose/mock-auth
     environment:
-      KEY_PATH: "/data/mock-auth-key.pem"
+      KEY_PATH: /data/mock-auth-key.pem
     volumes:
-      - mock_auth_data:/data
+    - mock_auth_data:/data
     ports:
-      - "8080:8080"
-
+    - 8080:8080
+    networks:
+    - plantx
   opa:
     image: openpolicyagent/opa:latest
-    command: "run --server --addr :8181 /policies"
+    command: run --server --addr :8181 /policies
     volumes:
-      - ./opa:/policies:ro
+    - ./opa:/policies:ro
     ports:
-      - "8181:8181"
-
+    - 8181:8181
+    networks:
+    - plantx
   registry-service:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.registry
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      REGISTRY_DATABASE_DSN: "postgres://plantx:plantx@postgres:5432/plantx?sslmode=disable"
-      REGISTRY_MIGRATIONS_DIR: "/root/migrations"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      REGISTRY_DATABASE_DSN: postgres://plantx:plantx@postgres:5432/plantx?sslmode=disable
+      REGISTRY_MIGRATIONS_DIR: /root/migrations
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,69 +67,72 @@ services:
       opa:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/ready || exit 1"]
+      test:
+      - CMD-SHELL
+      - wget -qO- http://localhost:8081/ready || exit 1
       interval: 5s
       timeout: 5s
       retries: 10
-
+    networks:
+    - plantx
   portal:
     build:
       context: ../..
       dockerfile: apps/portal/Dockerfile
     depends_on:
-      - order-service
-      - test-service
-      - tenant-service
-      - iam-service
-      - gateway-service
-      - registry-service
-      - audit-service
-      - demo-service
-
+    - order-service
+    - test-service
+    - tenant-service
+    - iam-service
+    - gateway-service
+    - registry-service
+    - audit-service
+    - demo-service
+    networks:
+    - plantx
   gateway:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.gateway-nginx
     environment:
-      REGISTRY_SYNC_URL: "http://registry-service:8081/api/registry/v1/sync-routes"
-      MICRO_APPS_URL: "http://registry-service:8081/api/registry/v1/micro-apps"
-      TOKEN_URL: "http://mock-auth:8080/oauth/token"
-      CLIENT_ID: "portal"
-      CLIENT_SECRET: "portal"
-      SYNC_INTERVAL: "30"
+      REGISTRY_SYNC_URL: http://registry-service:8081/api/registry/v1/sync-routes
+      MICRO_APPS_URL: http://registry-service:8081/api/registry/v1/micro-apps
+      TOKEN_URL: http://mock-auth:8080/oauth/token
+      CLIENT_ID: portal
+      CLIENT_SECRET: portal
+      SYNC_INTERVAL: '30'
     ports:
-      - "80:80"
+    - 80:80
     depends_on:
-      - order-service
-      - test-service
-      - tenant-service
-      - iam-service
-      - gateway-service
-      - registry-service
-      - audit-service
-      - mock-auth
-      - portal
-      - demo-service
-      - demo-ui
+    - order-service
+    - test-service
+    - tenant-service
+    - iam-service
+    - gateway-service
+    - registry-service
+    - audit-service
+    - mock-auth
+    - portal
+    - demo-service
+    - demo-ui
     networks:
-      - default
-      - plantx
-
+    - default
+    - plantx
   order-service:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.order
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      DATABASE_DSN: "postgres://plantx:plantx@postgres:5432/plantx?sslmode=disable"
-      NATS_URL: "nats://nats:4222"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      OTEL_EXPORTER_OTLP_ENDPOINT: ""
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      DATABASE_DSN: postgres://plantx:plantx@postgres:5432/plantx?sslmode=disable
+      NATS_URL: nats://nats:4222
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      OTEL_EXPORTER_OTLP_ENDPOINT: ''
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       postgres:
         condition: service_healthy
@@ -138,19 +144,20 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   test-service:
     build:
       context: ../..
       dockerfile: services/test-service/Dockerfile
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       postgres:
         condition: service_healthy
@@ -162,19 +169,20 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   tenant-service:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.tenant
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       mock-auth:
         condition: service_started
@@ -182,19 +190,20 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   iam-service:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.iam
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       mock-auth:
         condition: service_started
@@ -202,19 +211,20 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   gateway-service:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.gateway
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       mock-auth:
         condition: service_started
@@ -222,19 +232,20 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   audit-service:
     build:
       context: ../..
       dockerfile: deployments/docker-compose/Dockerfile.audit
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       mock-auth:
         condition: service_started
@@ -242,19 +253,20 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   demo-service:
     build:
       context: ../..
       dockerfile: demo_app/backend/Dockerfile
     environment:
-      GRPC_PORT: "8080"
-      HTTP_PORT: "8081"
-      MAXKEY_ISSUER: "http://mock-auth:8080"
-      MAXKEY_JWKS_URL: "http://mock-auth:8080/.well-known/jwks.json"
-      OPA_URL: "http://opa:8181"
-      GATEWAY_SERVICE_GRPC_ADDR: "gateway-service:8080"
-      REGISTRY_SERVICE_GRPC_ADDR: "registry-service:8080"
+      GRPC_PORT: '8080'
+      HTTP_PORT: '8081'
+      MAXKEY_ISSUER: http://mock-auth:8080
+      MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
+      OPA_URL: http://opa:8181
+      GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
+      REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
       postgres:
         condition: service_healthy
@@ -266,62 +278,58 @@ services:
         condition: service_started
       registry-service:
         condition: service_healthy
-
+    networks:
+    - plantx
   demo-ui:
     build:
       context: ../../demo_app/frontend
       dockerfile: Dockerfile
     container_name: docker-compose-demo-ui-1
     networks:
-      - plantx
+    - plantx
     restart: unless-stopped
-
   temporal-server:
     image: temporalio/auto-setup:1.22
     container_name: docker-compose-temporal-server-1
     environment:
-      - DB=postgres12
-      - DB_PORT=5432
-      - POSTGRES_USER=plantx
-      - POSTGRES_PWD=plantx
-      - POSTGRES_SEEDS=postgres
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    - DB=postgres12
+    - DB_PORT=5432
+    - POSTGRES_USER=plantx
+    - POSTGRES_PWD=plantx
+    - POSTGRES_SEEDS=postgres
+    - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - plantx
-
+    - plantx
   temporal-ui:
     image: temporalio/ui:2.26.2
     container_name: docker-compose-temporal-ui-1
     environment:
-      - TEMPORAL_ADDRESS=temporal-server:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    - TEMPORAL_ADDRESS=temporal-server:7233
+    - TEMPORAL_CORS_ORIGINS=http://localhost:3000
     ports:
-      - "8083:8080"
+    - 8083:8080
     depends_on:
-      - temporal-server
+    - temporal-server
     networks:
-      - plantx
-
+    - plantx
   temporal-worker:
     build:
       context: ../..
       dockerfile: platform/temporal-worker/Dockerfile
     container_name: docker-compose-temporal-worker-1
     environment:
-      - TEMPORAL_HOST=temporal-server:7233
-      - REGISTRY_SERVICE_GRPC_ADDR=registry-service:8080
+    - TEMPORAL_HOST=temporal-server:7233
+    - REGISTRY_SERVICE_GRPC_ADDR=registry-service:8080
     depends_on:
-      - temporal-server
-      - registry-service
+    - temporal-server
+    - registry-service
     networks:
-      - plantx
-
+    - plantx
 volumes:
-  postgres_data:
-  mock_auth_data:
-
+  postgres_data: null
+  mock_auth_data: null
 networks:
-  plantx:
+  plantx: null
