@@ -1,3 +1,4 @@
+// Package db defines the database abstraction and transaction helpers used by Kit.
 package db
 
 import (

@@ -1,3 +1,4 @@
+// Package errors defines standard error types and codes for PlantX services.
 package errors
 
 import "fmt"

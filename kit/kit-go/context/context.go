@@ -1,3 +1,4 @@
+// Package kitctx provides request-scoped context helpers for user, tenant, and trace data.
 package kitctx
 
 import (

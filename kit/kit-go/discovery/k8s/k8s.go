@@ -35,12 +35,12 @@ type Registry struct {
 }
 
 // Register is a no-op for the K8s DNS registry.
-func (r *Registry) Register(ctx context.Context, serviceName string, inst discovery.Instance) error {
+func (r *Registry) Register(_ context.Context, serviceName string, inst discovery.Instance) error {
 	return nil
 }
 
 // Deregister is a no-op for the K8s DNS registry.
-func (r *Registry) Deregister(ctx context.Context, serviceName string, instID string) error {
+func (r *Registry) Deregister(_ context.Context, serviceName string, instID string) error {
 	return nil
 }
 

@@ -17,7 +17,7 @@ type Authenticator struct {
 }
 
 // Authenticate validates the credential against the configured static tokens.
-func (a *Authenticator) Authenticate(ctx context.Context, credential string) (*auth.UserInfo, error) {
+func (a *Authenticator) Authenticate(_ context.Context, credential string) (*auth.UserInfo, error) {
 	if a == nil || a.Tokens == nil {
 		return nil, errors.New("no tokens configured")
 	}
