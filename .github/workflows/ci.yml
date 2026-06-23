@@ -118,7 +118,7 @@ jobs:
           path: .
       - name: Build service images
         run: |
-          docker build -t plantx/order-service:${{ github.sha }} ./services/order
+          docker build -f services/order/Dockerfile -t plantx/order-service:${{ github.sha }} .
 
   publish-images:
     runs-on: ubuntu-latest
@@ -139,6 +139,6 @@ jobs:
       - name: Build and push
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
-          docker build -t ghcr.io/plantx/order-service:${VERSION} -t ghcr.io/plantx/order-service:latest ./services/order
+          docker build -f services/order/Dockerfile -t ghcr.io/plantx/order-service:${VERSION} -t ghcr.io/plantx/order-service:latest .
           docker push ghcr.io/plantx/order-service:${VERSION}
           docker push ghcr.io/plantx/order-service:latest
