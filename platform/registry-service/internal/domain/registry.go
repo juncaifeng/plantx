@@ -38,6 +38,7 @@ type MicroApp struct {
 	ApplicationID     string
 	ApplicationKey    string
 	Upstream          string
+	Status            ResourceStatus
 }
 
 // RoutePolicy represents gateway routing/edge policies for a service.
@@ -69,6 +70,7 @@ type Service struct {
 	Policy         *RoutePolicy
 	ApplicationID  string
 	ApplicationKey string
+	Status         ResourceStatus
 }
 
 // Menu represents a configurable portal menu item.
@@ -83,6 +85,7 @@ type Menu struct {
 	RequirePermission string
 	ApplicationID     string
 	ApplicationKey    string
+	Status            ResourceStatus
 }
 
 // Repository defines persistence operations for the registry.
