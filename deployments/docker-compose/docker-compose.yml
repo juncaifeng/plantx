@@ -293,7 +293,7 @@ services:
       - plantx
 
   temporal-ui:
-    image: temporalio/ui:2.21
+    image: temporalio/ui:2.26.2
     container_name: docker-compose-temporal-ui-1
     environment:
       - TEMPORAL_ADDRESS=temporal-server:7233
