@@ -11,6 +11,7 @@ use (
 	./platform/iam-service
 	./platform/notification-service
 	./platform/registry-service
+	./platform/temporal-worker
 	./platform/tenant-service
 	./services/order
 	./services/test-service
