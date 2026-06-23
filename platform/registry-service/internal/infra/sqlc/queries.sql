@@ -28,14 +28,16 @@ INSERT INTO micro_apps (
     bundle_url,
     menu_label_key,
     require_permission,
-    application_id
-) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    application_id,
+    upstream
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (service_id, name) DO UPDATE SET
     route = EXCLUDED.route,
     bundle_url = EXCLUDED.bundle_url,
     menu_label_key = EXCLUDED.menu_label_key,
     require_permission = EXCLUDED.require_permission,
     application_id = EXCLUDED.application_id,
+    upstream = EXCLUDED.upstream,
     updated_at = now()
 RETURNING *;
 
@@ -54,6 +56,7 @@ UPDATE micro_apps SET
     bundle_url = $3,
     menu_label_key = $4,
     require_permission = $5,
+    upstream = $6,
     updated_at = now()
 WHERE name = $1
 RETURNING *;
