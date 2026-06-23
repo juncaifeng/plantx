@@ -313,6 +313,7 @@ message MicroApp {
   string require_permission = 5;
   string application_id = 6;
   string application_key = 7;
+  string upstream = 8;
 }
 
 message RegisterServiceRequest {
@@ -356,6 +357,7 @@ message UpdateMicroAppRequest {
   string bundle_url = 3;
   string menu_label_key = 4;
   string require_permission = 5;
+  string upstream = 6;
 }
 
 message DeleteMicroAppRequest {
