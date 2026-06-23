@@ -1,5 +1,13 @@
 import type { KitApiClient } from './index.js';
 
+export type ResourceStatus =
+  | 'UNSPECIFIED'
+  | 'DRAFT'
+  | 'PENDING'
+  | 'ONLINE'
+  | 'OFFLINE'
+  | 'UPDATING';
+
 export interface Route {
   path: string;
   method: string;
@@ -13,6 +21,7 @@ export interface MicroApp {
   requirePermission: string;
   applicationId?: string;
   applicationKey?: string;
+  status?: ResourceStatus;
 }
 
 export interface Service {
@@ -24,6 +33,7 @@ export interface Service {
   microApps?: MicroApp[];
   applicationId?: string;
   applicationKey?: string;
+  status?: ResourceStatus;
 }
 
 export interface RegisterServiceRequest {
@@ -84,6 +94,7 @@ export interface Menu {
   requirePermission?: string;
   applicationId?: string;
   applicationKey?: string;
+  status?: ResourceStatus;
 }
 
 export interface CreateMenuRequest {

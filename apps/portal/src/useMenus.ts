@@ -39,7 +39,7 @@ export function useMenus(options: UseMenusOptions = {}): UseMenusResult {
     promise
       .then((data) => {
         if (!cancelled) {
-          setMenus(data.menus ?? []);
+          setMenus((data.menus ?? []).filter((m) => m.status === 'ONLINE'));
         }
       })
       .catch((err) => {

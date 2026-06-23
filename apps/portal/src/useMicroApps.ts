@@ -49,7 +49,9 @@ export function useMicroApps(options: UseMicroAppsOptions = {}): UseMicroAppsRes
     promise
       .then((data) => {
         if (!cancelled) {
-          setMicroApps(data.microApps?.map(toManifest) ?? []);
+          setMicroApps(
+            (data.microApps ?? []).filter((m) => m.status === 'ONLINE').map(toManifest)
+          );
         }
       })
       .catch((err) => {
