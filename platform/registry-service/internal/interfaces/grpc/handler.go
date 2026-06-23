@@ -173,6 +173,7 @@ func (h *Handler) UpdateMicroApp(ctx context.Context, req *api.UpdateMicroAppReq
 		MenuLabelKey:      req.GetMenuLabelKey(),
 		RequirePermission: req.GetRequirePermission(),
 		Upstream:          req.GetUpstream(),
+		Status:            req.GetStatus(),
 	}, ""))
 	if err != nil {
 		return nil, err

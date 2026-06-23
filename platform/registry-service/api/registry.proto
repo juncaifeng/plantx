@@ -386,6 +386,7 @@ message UpdateMicroAppRequest {
   string menu_label_key = 4;
   string require_permission = 5;
   string upstream = 6;
+  ResourceStatus status = 7;
 }
 
 message DeleteMicroAppRequest {

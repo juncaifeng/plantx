@@ -459,6 +459,36 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/registry/v1/services/{name}/status:
+        post:
+            tags:
+                - RegistryService
+            operationId: RegistryService_UpdateServiceStatus
+            parameters:
+                - name: name
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateServiceStatusRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Service'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/registry/v1/services/{serviceId}/route-policy:
         get:
             tags:
@@ -582,6 +612,9 @@ components:
                     type: string
                 applicationKey:
                     type: string
+                status:
+                    type: integer
+                    format: enum
         GoogleProtobufAny:
             type: object
             properties:
@@ -614,6 +647,9 @@ components:
                     type: string
                 applicationKey:
                     type: string
+                status:
+                    type: integer
+                    format: enum
         MenuList:
             type: object
             properties:
@@ -827,6 +863,9 @@ components:
                     type: string
                 applicationKey:
                     type: string
+                status:
+                    type: integer
+                    format: enum
         UpdateMicroAppRequest:
             type: object
             properties:
@@ -840,5 +879,18 @@ components:
                     type: string
                 requirePermission:
                     type: string
+                upstream:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+        UpdateServiceStatusRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
 tags:
     - name: RegistryService

@@ -71,6 +71,8 @@ export interface UpdateMicroAppRequest {
   bundleUrl?: string;
   menuLabelKey?: string;
   requirePermission?: string;
+  upstream?: string;
+  status?: ResourceStatus;
 }
 
 export interface DeleteMicroAppRequest {
