@@ -20,7 +20,6 @@ import (
 	"github.com/plantx/kit/kit-go/log"
 	"github.com/plantx/kit/kit-go/server"
 	"github.com/plantx/kit/kit-go/tenant"
-	registryapi "github.com/plantx/platform/registry-service/api"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -59,47 +58,16 @@ func main() {
 		DecisionPath: opaCfg.GetString("decision_path"),
 	})
 
-	registrar := gateway.AutoRegister("demo-service",
-		gateway.WithApplication(gateway.Application{
-			Key:       "demo",
-			Name:      "Demo",
-			LabelKey:  "nav.demo",
-			SortOrder: 100,
-			Status:    registryapi.ApplicationStatus_APPLICATION_STATUS_ACTIVE,
-		}),
-		gateway.WithMicroApp(gateway.MicroApp{
-			Name:              "demo-ui",
-			Route:             "/demo",
-			BundleURL:         "/apps/demo-ui/demo-ui.js",
-			MenuLabelKey:      "nav.demo",
-			RequirePermission: "item:list",
-			Upstream:          "demo-ui:80",
-		}),
-		gateway.WithMenu(gateway.Menu{
-			LabelKey:          "nav.demo.home",
-			Route:             "/demo",
-			Icon:              "HomeOutlined",
-			SortOrder:         10,
-			MicroAppName:      "demo-ui",
-			RequirePermission: "item:list",
-		}),
-		gateway.WithMenu(gateway.Menu{
-			LabelKey:          "nav.demo.config",
-			Route:             "/demo/config",
-			Icon:              "SettingOutlined",
-			SortOrder:         20,
-			MicroAppName:      "demo-ui",
-			RequirePermission: "setting:list",
-		}),
-		gateway.WithMenu(gateway.Menu{
-			LabelKey:          "nav.demo.system",
-			Route:             "/demo/system",
-			Icon:              "ToolOutlined",
-			SortOrder:         30,
-			MicroAppName:      "demo-ui",
-			RequirePermission: "setting:admin",
-		}),
-	)
+	// Load gateway registration config from YAML. The path can be overridden via
+	// DEMO_SERVICE_CONFIG; otherwise the embedded default is used.
+	configPath := os.Getenv("DEMO_SERVICE_CONFIG")
+	if configPath == "" {
+		configPath = "config/service.yaml"
+	}
+	registrar, err := gateway.AutoRegisterFromConfig(configPath)
+	if err != nil {
+		stdLogger.Fatalf("failed to load gateway config: %v", err)
+	}
 
 	srv := server.New(server.Options{
 		ServiceName:      "demo-service",

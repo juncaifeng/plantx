@@ -319,6 +319,17 @@ srv := server.New(server.Options{
 })
 ```
 
+也可以用 YAML 声明式配置（推荐业务服务使用）：
+
+```go
+registrar, err := gateway.AutoRegisterFromConfig("config/service.yaml")
+if err != nil {
+    log.Fatalf("load gateway config: %v", err)
+}
+```
+
+YAML 内支持 `${VAR:-default}` 环境变量展开，便于同一镜像在 Docker Compose 与生产环境使用不同地址。
+
 ---
 
 ## 7. UI 只负责展示逻辑

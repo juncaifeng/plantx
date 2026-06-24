@@ -8,7 +8,7 @@ description: >
   business services or micro-frontends on PlantX.
 metadata:
   author: PlantX Platform Team
-  version: "1.2"
+  version: "1.3"
   updated: "2026-06-24"
 ---
 
@@ -341,11 +341,64 @@ For `order-service`, the default REST prefix is `/api/order/v1`.
 
 **Idempotency**: menu registration is upserted by `(application_id, label_key, route)`. Restarting a service updates existing menus instead of creating duplicates. The service lifecycle state machine sets menus and micro-apps `OFFLINE` when the service stops and back to `ONLINE` when it starts.
 
-### 4.4 Route Registration
+### 4.4 Declarative Registration via YAML
+
+For better developer experience, a service can declare its registration in a YAML file and load it at startup. This keeps boilerplate out of Go code and makes cross-machine addresses easier to configure through environment variables.
+
+Create `config/service.yaml`:
+
+```yaml
+service:
+  name: order-service
+  grpc_host: ${ORDER_SERVICE_GRPC_HOST:-order-service:8080}
+  rest_prefix: /api/order/v1
+  registry_addr: ${REGISTRY_SERVICE_GRPC_ADDR:-registry-service:8080}
+
+application:
+  key: order
+  name: Order
+  label_key: nav.orders
+  icon: ShoppingCartOutlined
+  sort_order: 10
+  status: ACTIVE
+
+micro_apps:
+  - name: order-ui
+    route: /order
+    bundle_url: /apps/order-ui/order-ui.js
+    menu_label_key: nav.orders
+    require_permission: order:read
+    upstream: ${ORDER_UI_UPSTREAM:-order-ui:80}
+
+menus:
+  - label_key: nav.orders.list
+    route: /order
+    icon: ShoppingCartOutlined
+    sort_order: 10
+    micro_app_name: order-ui
+    require_permission: order:read
+```
+
+Then load it in `main.go`:
+
+```go
+configPath := os.Getenv("ORDER_SERVICE_CONFIG")
+if configPath == "" {
+    configPath = "config/service.yaml"
+}
+registrar, err := gateway.AutoRegisterFromConfig(configPath)
+if err != nil {
+    log.Fatalf("load gateway config: %v", err)
+}
+```
+
+Environment variable expansion supports `${VAR}` and `${VAR:-default}`. This lets the same image run in Docker Compose (using defaults) and in production (using real IPs/hostnames).
+
+### 4.5 Route Registration
 
 `registry-service` records the service's `rest_prefix` as a wildcard route (`{Path: svc.RestPrefix, Method: "*"}`). Individual REST paths are handled by each service's own grpc-gateway. The platform API gateway (nginx/apisix) uses registry data to route `/api/order/v1/...` to the backend.
 
-### 4.5 Declare Permissions
+### 4.6 Declare Permissions
 
 In the proto file:
 
@@ -366,7 +419,7 @@ rpc ListOrders(ListOrdersRequest) returns (OrderList) {
 
 The `kit-go` authz interceptor validates that the caller has the required permission.
 
-### 4.6 Call Platform Services from Go
+### 4.7 Call Platform Services from Go
 
 ```go
 import (

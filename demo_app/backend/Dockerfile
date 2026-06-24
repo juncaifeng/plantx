@@ -8,5 +8,6 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /bin/demo-service .
+COPY --from=builder /app/demo_app/backend/config ./config
 EXPOSE 8080 8081
 CMD ["./demo-service"]

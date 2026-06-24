@@ -1,0 +1,42 @@
+service:
+  name: demo-service
+  grpc_host: ${DEMO_SERVICE_GRPC_HOST:-demo-service:8080}
+  rest_prefix: /api/demo/v1
+  registry_addr: ${REGISTRY_SERVICE_GRPC_ADDR:-registry-service:8080}
+
+application:
+  key: demo
+  name: Demo
+  label_key: nav.demo
+  sort_order: 100
+  status: ACTIVE
+
+micro_apps:
+  - name: demo-ui
+    route: /demo
+    bundle_url: /apps/demo-ui/demo-ui.js
+    menu_label_key: nav.demo
+    require_permission: item:list
+    upstream: ${DEMO_UI_UPSTREAM:-demo-ui:80}
+
+menus:
+  - label_key: nav.demo.home
+    route: /demo
+    icon: HomeOutlined
+    sort_order: 10
+    micro_app_name: demo-ui
+    require_permission: item:list
+
+  - label_key: nav.demo.config
+    route: /demo/config
+    icon: SettingOutlined
+    sort_order: 20
+    micro_app_name: demo-ui
+    require_permission: setting:list
+
+  - label_key: nav.demo.system
+    route: /demo/system
+    icon: ToolOutlined
+    sort_order: 30
+    micro_app_name: demo-ui
+    require_permission: setting:admin
