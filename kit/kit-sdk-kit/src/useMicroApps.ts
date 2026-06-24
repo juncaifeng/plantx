@@ -4,6 +4,7 @@ import { useKitContext, type MicroAppManifest, useKitPermission } from './index.
 
 export interface UseMicroAppsOptions {
   applicationId?: string;
+  includeOffline?: boolean;
 }
 
 export interface UseMicroAppsResult {
@@ -26,7 +27,7 @@ export function useMicroApps(
   options: UseMicroAppsOptions = {},
   client?: RegistryServiceClient | null
 ): UseMicroAppsResult {
-  const { applicationId } = options;
+  const { applicationId, includeOffline } = options;
   const ctx = useKitContext();
   const registryClient = useMemo(
     () => client ?? (ctx.apiClient ? new RegistryServiceClient(ctx.apiClient) : null),
@@ -53,7 +54,11 @@ export function useMicroApps(
     promise
       .then((data) => {
         if (!cancelled) {
-          setMicroApps(data.microApps?.map(toManifest) ?? []);
+          let list = data.microApps ?? [];
+          if (!includeOffline) {
+            list = list.filter((m) => m.status === 'RESOURCE_STATUS_ONLINE');
+          }
+          setMicroApps(list.map(toManifest));
         }
       })
       .catch((err) => {
@@ -70,7 +75,7 @@ export function useMicroApps(
     return () => {
       cancelled = true;
     };
-  }, [registryClient, applicationId]);
+  }, [registryClient, applicationId, includeOffline]);
 
   return { microApps, loading, error };
 }

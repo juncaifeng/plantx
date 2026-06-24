@@ -20,6 +20,17 @@ type MicroApp struct {
 	Upstream          string
 }
 
+// Menu describes a portal menu entry exposed by a service.
+type Menu struct {
+	LabelKey          string
+	Route             string
+	Icon              string
+	ParentID          string
+	SortOrder         int32
+	MicroAppName      string
+	RequirePermission string
+}
+
 // Application describes a product / application that groups services, micro-apps and menus.
 type Application struct {
 	Key         string
@@ -45,11 +56,28 @@ func toPBMicroApp(m *MicroApp) *api.MicroApp {
 	}
 }
 
+func toPBMenu(m *Menu) *api.Menu {
+	if m == nil {
+		return nil
+	}
+	return &api.Menu{
+		LabelKey:          m.LabelKey,
+		Route:             m.Route,
+		Icon:              m.Icon,
+		ParentId:          m.ParentID,
+		SortOrder:         m.SortOrder,
+		MicroAppName:      m.MicroAppName,
+		RequirePermission: m.RequirePermission,
+		Status:            api.ResourceStatus_RESOURCE_STATUS_ONLINE,
+	}
+}
+
 type options struct {
 	registryAddr string
 	grpcHost     string
 	restPrefix   string
 	microApps    []*MicroApp
+	menus        []*Menu
 	application  *Application
 }
 
@@ -61,6 +89,14 @@ type Option func(*options)
 func WithMicroApp(m MicroApp) Option {
 	return func(o *options) {
 		o.microApps = append(o.microApps, &m)
+	}
+}
+
+// WithMenu attaches a portal menu entry to the service registration.
+// May be called multiple times to register multiple menus for one service.
+func WithMenu(m Menu) Option {
+	return func(o *options) {
+		o.menus = append(o.menus, &m)
 	}
 }
 
@@ -150,6 +186,13 @@ func (r *registrar) Register(ctx context.Context) error {
 		if _, err := client.RegisterMicroApp(ctx, r.serviceName, toPBMicroApp(m), r.applicationID, r.applicationKey); err != nil {
 			_ = client.Close()
 			return fmt.Errorf("register micro-app %s: %w", r.serviceName, err)
+		}
+	}
+
+	for _, m := range r.opts.menus {
+		if _, err := client.RegisterMenu(ctx, toPBMenu(m), r.applicationID, r.applicationKey); err != nil {
+			_ = client.Close()
+			return fmt.Errorf("register menu %s: %w", m.LabelKey, err)
 		}
 	}
 	return nil

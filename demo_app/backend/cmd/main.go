@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	stdlog "log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	demoapi "github.com/plantx/demo_app/backend/api"
 	"github.com/plantx/demo_app/backend/internal/app"
@@ -23,8 +21,6 @@ import (
 	"github.com/plantx/kit/kit-go/server"
 	"github.com/plantx/kit/kit-go/tenant"
 	registryapi "github.com/plantx/platform/registry-service/api"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -79,6 +75,30 @@ func main() {
 			RequirePermission: "item:list",
 			Upstream:          "demo-ui:80",
 		}),
+		gateway.WithMenu(gateway.Menu{
+			LabelKey:          "nav.demo.home",
+			Route:             "/demo",
+			Icon:              "HomeOutlined",
+			SortOrder:         10,
+			MicroAppName:      "demo-ui",
+			RequirePermission: "item:list",
+		}),
+		gateway.WithMenu(gateway.Menu{
+			LabelKey:          "nav.demo.config",
+			Route:             "/demo/config",
+			Icon:              "SettingOutlined",
+			SortOrder:         20,
+			MicroAppName:      "demo-ui",
+			RequirePermission: "setting:list",
+		}),
+		gateway.WithMenu(gateway.Menu{
+			LabelKey:          "nav.demo.system",
+			Route:             "/demo/system",
+			Icon:              "ToolOutlined",
+			SortOrder:         30,
+			MicroAppName:      "demo-ui",
+			RequirePermission: "setting:admin",
+		}),
 	)
 
 	srv := server.New(server.Options{
@@ -104,20 +124,6 @@ func main() {
 	}
 	stdLogger.Println("demo gateway registered")
 
-	// Seed demo menus in registry-service after auto-registration has created
-	// the application. kit-go/gateway.AutoRegister handles service/application/
-	// micro-app registration; menu entities are created by calling the platform
-	// registry-service API directly. This is a one-time bootstrap step, not a
-	// kit-layer reimplementation.
-	// Seed demo menus asynchronously: AutoRegister creates the application
-	// during service startup, which may not have completed by the time we
-	// first query the registry.
-	go func() {
-		if err := seedDemoMenus(stdLogger); err != nil {
-			stdLogger.Printf("failed to seed demo menus: %v", err)
-		}
-	}()
-
 	stdLogger.Printf("demo service starting on grpc_port=%d http_port=%d", grpcPort, httpPort)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -125,100 +131,4 @@ func main() {
 	if err := srv.Run(ctx); err != nil {
 		stdLogger.Fatalf("server failed: %v", err)
 	}
-}
-
-func seedDemoMenus(stdLogger *stdlog.Logger) error {
-	registryAddr := os.Getenv("REGISTRY_SERVICE_GRPC_ADDR")
-	if registryAddr == "" {
-		registryAddr = "registry-service:8080"
-	}
-
-	// Retry a few times in case registry-service is still starting.
-	var conn *grpc.ClientConn
-	var err error
-	for i := 0; i < 30; i++ {
-		conn, err = grpc.NewClient(registryAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err == nil {
-			break
-		}
-		time.Sleep(time.Second)
-	}
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	client := registryapi.NewRegistryServiceClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
-	var appID string
-	for i := 0; i < 30; i++ {
-		apps, err := client.ListApplications(ctx, &registryapi.ListApplicationsRequest{})
-		if err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		}
-		for _, a := range apps.GetApplications() {
-			if a.GetKey() == "demo" {
-				appID = a.GetId()
-				break
-			}
-		}
-		if appID != "" {
-			break
-		}
-		time.Sleep(2 * time.Second)
-	}
-	if appID == "" {
-		return nil // Application not found; menu seeding skipped.
-	}
-
-	menus := []struct {
-		labelKey string
-		route    string
-		icon     string
-		perm     string
-	}{
-		{labelKey: "nav.demo.home", route: "/demo", icon: "HomeOutlined", perm: "item:list"},
-		{labelKey: "nav.demo.config", route: "/demo/config", icon: "SettingOutlined", perm: "setting:list"},
-		{labelKey: "nav.demo.system", route: "/demo/system", icon: "ToolOutlined", perm: "setting:admin"},
-	}
-
-	// Build a set of existing menus to avoid duplicates across restarts.
-	existingResp, err := client.ListMenus(ctx, &registryapi.ListMenusRequest{})
-	if err != nil {
-		return fmt.Errorf("list menus: %w", err)
-	}
-	existing := make(map[string]struct{})
-	for _, menu := range existingResp.GetMenus() {
-		if menu.GetApplicationId() != appID {
-			continue
-		}
-		key := menu.GetLabelKey() + "|" + menu.GetRoute()
-		existing[key] = struct{}{}
-	}
-
-	for _, m := range menus {
-		key := m.labelKey + "|" + m.route
-		if _, ok := existing[key]; ok {
-			stdLogger.Printf("menu %s already exists, skipping", m.labelKey)
-			continue
-		}
-		_, err := client.CreateMenu(ctx, &registryapi.CreateMenuRequest{
-			LabelKey:          m.labelKey,
-			Route:             m.route,
-			Icon:              m.icon,
-			SortOrder:         10,
-			MicroAppName:      "demo-ui",
-			ApplicationId:     appID,
-			RequirePermission: m.perm,
-		})
-		if err != nil {
-			stdLogger.Printf("failed to create menu %s: %v", m.labelKey, err)
-		} else {
-			stdLogger.Printf("created menu %s", m.labelKey)
-		}
-	}
-	return nil
 }

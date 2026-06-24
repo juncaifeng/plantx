@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Card, Dropdown, Space, Spin, Typography } from 'antd';
 import { AppstoreOutlined, DownOutlined } from '@ant-design/icons';
 import type { Application } from '@plantx/kit-sdk-api/registry';
-import { useApplications } from '../useApplications';
+import { useApplications } from '@plantx/kit-sdk-kit';
 import { useI18n } from '../i18n';
 import { storeApplicationId } from '../applicationStorage';
 

@@ -91,6 +91,22 @@ func (c *Client) ListMicroApps(ctx context.Context) ([]*api.MicroApp, error) {
 	return resp.GetMicroApps(), nil
 }
 
+// RegisterMenu registers a menu item with the registry.
+func (c *Client) RegisterMenu(ctx context.Context, menu *api.Menu, applicationID, applicationKey string) (*api.Menu, error) {
+	return c.client.CreateMenu(ctx, &api.CreateMenuRequest{
+		LabelKey:          menu.GetLabelKey(),
+		Route:             menu.GetRoute(),
+		Icon:              menu.GetIcon(),
+		ParentId:          menu.GetParentId(),
+		SortOrder:         menu.GetSortOrder(),
+		MicroAppName:      menu.GetMicroAppName(),
+		RequirePermission: menu.GetRequirePermission(),
+		ApplicationId:     applicationID,
+		ApplicationKey:    applicationKey,
+		Status:            menu.GetStatus(),
+	})
+}
+
 // Close closes the underlying gRPC connection.
 func (c *Client) Close() error {
 	return c.conn.Close()

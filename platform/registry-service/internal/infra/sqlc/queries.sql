@@ -87,6 +87,14 @@ INSERT INTO menus (
     application_id,
     status
 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+ON CONFLICT (application_id, label_key, route) DO UPDATE SET
+    icon = EXCLUDED.icon,
+    parent_id = EXCLUDED.parent_id,
+    sort_order = EXCLUDED.sort_order,
+    micro_app_name = EXCLUDED.micro_app_name,
+    require_permission = EXCLUDED.require_permission,
+    status = EXCLUDED.status,
+    updated_at = now()
 RETURNING *;
 
 -- name: ListMenus :many

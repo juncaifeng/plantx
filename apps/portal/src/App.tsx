@@ -1,13 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { KitProvider, type KitContextValue } from '@plantx/kit-sdk-kit';
+import {
+  KitProvider,
+  type KitContextValue,
+  useMicroApps,
+} from '@plantx/kit-sdk-kit';
 import { createClient, type KitApiClient } from '@plantx/kit-sdk-api';
 import { decodeJwt, TOKEN_KEY } from './auth';
 import { HomePage } from './HomePage';
 import { Layout } from './Layout';
 import { LoginPage } from './LoginPage';
 import { MicroAppPage } from './MicroAppPage';
-import { useMicroApps } from './useMicroApps';
 
 function buildApiClient(onUnauthorized?: () => void): KitApiClient {
   return createClient({

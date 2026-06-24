@@ -2,15 +2,18 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Button, Layout as AntLayout, Menu, Space, Spin, Typography } from 'antd';
 import { MenuOutlined, AppstoreOutlined } from '@ant-design/icons';
-import { useKitContext, type MicroAppManifest } from '@plantx/kit-sdk-kit';
+import {
+  useKitContext,
+  type MicroAppManifest,
+  useApplications,
+  useMicroApps,
+  useMenus,
+} from '@plantx/kit-sdk-kit';
 import type { Menu as RegistryMenu, Application } from '@plantx/kit-sdk-api/registry';
 import { useI18n, type I18nContextValue } from './i18n';
 import { LocaleSwitch } from './components/LocaleSwitch';
 import { ProductDrawer } from './components/ProductDrawer';
 import { getStoredApplicationId, storeApplicationId } from './applicationStorage';
-import { useApplications } from './useApplications';
-import { useMicroApps } from './useMicroApps';
-import { useMenus } from './useMenus';
 
 interface LayoutProps {
   onLogout: () => void;

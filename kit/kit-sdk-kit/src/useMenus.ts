@@ -4,6 +4,7 @@ import { useKitContext } from './index.js';
 
 export interface UseMenusOptions {
   applicationId?: string;
+  includeOffline?: boolean;
 }
 
 export interface UseMenusResult {
@@ -16,7 +17,7 @@ export function useMenus(
   options: UseMenusOptions = {},
   client?: RegistryServiceClient | null
 ): UseMenusResult {
-  const { applicationId } = options;
+  const { applicationId, includeOffline } = options;
   const ctx = useKitContext();
   const registryClient = useMemo(
     () => client ?? (ctx.apiClient ? new RegistryServiceClient(ctx.apiClient) : null),
@@ -43,7 +44,11 @@ export function useMenus(
     promise
       .then((data) => {
         if (!cancelled) {
-          setMenus(data.menus ?? []);
+          let list = data.menus ?? [];
+          if (!includeOffline) {
+            list = list.filter((m) => m.status === 'RESOURCE_STATUS_ONLINE');
+          }
+          setMenus(list);
         }
       })
       .catch((err) => {
@@ -60,7 +65,7 @@ export function useMenus(
     return () => {
       cancelled = true;
     };
-  }, [registryClient, applicationId]);
+  }, [registryClient, applicationId, includeOffline]);
 
   return { menus, loading, error };
 }
