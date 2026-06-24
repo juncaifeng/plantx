@@ -514,10 +514,13 @@ Portal 登录
 文件：`.github/workflows/release-sdk.yml`
 
 - 通过 git tag 触发（`v*`）。
-- 标签版本即为所有 `kit/*` 包的发布版本，例如 `v0.2.0` 会把 `@plantx/kit-sdk-api`、`@plantx/kit-sdk-kit`、`@plantx/kit-ui` 都发布为 `0.2.0`。
-- Workflow 会自动 bump `kit/**/package.json` 版本、执行 `pnpm ci:publish`，并将版本变更提交回 `main`。
-- 发布脚本：`pnpm ci:publish` → `pnpm -r --filter './kit/**' exec npm publish --access public`。
-- 目标 registry：`https://registry.npmjs.org`。
+- 标签版本即为所有 `kit/*` 包的发布版本，例如 `v0.2.0` 会：
+  - 把 npm 包 `@plantx/kit-sdk-api`、`@plantx/kit-sdk-kit`、`@plantx/kit-ui` 发布为 `0.2.0`。
+  - 为 Go 子模块创建 tag：`kit/kit-go/v0.2.0`、`kit/kit-go/gateway/v0.2.0`、`kit/kit-cli/v0.2.0`。
+- Workflow 会自动 bump `kit/**/package.json` 版本、执行 `pnpm ci:publish`、推送 Go module tags，并将版本变更提交回 `main`。
+- npm 发布脚本：`pnpm ci:publish` → `pnpm -r --filter './kit/**' exec npm publish --access public`。
+- npm registry：`https://registry.npmjs.org`。
+- Go modules 通过 `git tag` 发布到默认 Go module proxy（`proxy.golang.org`）。
 - 必需 secret：`NPM_TOKEN`（需为 Granular Access Token，带 `@plantx` scope 的 publish 权限并启用 **Bypass 2FA**）。
 
 ### 11.5 `Commitlint`

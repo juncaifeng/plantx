@@ -40,6 +40,24 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Tag Go modules
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for module in kit/kit-go kit/kit-go/gateway kit/kit-cli; do
+            tag="${module}/v${VERSION}"
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists, skipping"
+            else
+              git tag "$tag"
+              git push origin "$tag"
+              echo "Created and pushed $tag"
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Commit version bump back to main
         run: |
           git config user.name "github-actions[bot]"

@@ -151,14 +151,28 @@ The `Release SDK` workflow (`.github/workflows/release-sdk.yml`) then:
 
 1. Builds all `kit/*` packages.
 2. Bumps every published `kit/*` package version to the tag version.
-3. Publishes to npmjs.org.
-4. Commits the `package.json` version bumps back to `main`.
+3. Publishes TypeScript SDK packages to npmjs.org.
+4. Creates Go module tags for `kit/kit-go`, `kit/kit-go/gateway`, and `kit/kit-cli`.
+5. Commits the `package.json` version bumps back to `main`.
 
 ### Versioning Rules
 
 - Use a single monorepo tag (`v0.2.0`) for all kit packages.
-- Tag `v0.2.0` will set `@plantx/kit-sdk-api`, `@plantx/kit-sdk-kit`, and `@plantx/kit-ui` to `0.2.0`.
+- Tag `v0.2.0` will:
+  - Set npm packages `@plantx/kit-sdk-api`, `@plantx/kit-sdk-kit`, and `@plantx/kit-ui` to `0.2.0`.
+  - Create Go module tags `kit/kit-go/v0.2.0`, `kit/kit-go/gateway/v0.2.0`, and `kit/kit-cli/v0.2.0`.
 - If a package should not be published, ensure it is excluded from the `ci:publish` script in `package.json`.
+
+### Go SDK Consumption
+
+Go modules do not use npm. After the workflow pushes the Go module tags, external consumers can fetch a released version:
+
+```bash
+go get github.com/plantx/kit/kit-go@v0.2.0
+go get github.com/plantx/kit/kit-go/gateway@v0.2.0
+```
+
+Inside the PlantX monorepo, services continue to use `replace` directives in `go.mod` to develop against the local kit-go source.
 
 ### NPM Token
 
