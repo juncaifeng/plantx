@@ -174,9 +174,14 @@ go get github.com/plantx/kit/kit-go/gateway@v0.2.0
 
 Inside the PlantX monorepo, services continue to use `replace` directives in `go.mod` to develop against the local kit-go source.
 
-### NPM Token
+### Required Secrets
 
-`NPM_TOKEN` must be a **Granular Access Token** with publish permission for the `@plantx` scope and 2FA bypass. Ordinary access tokens will fail with `403 Forbidden`.
+| Secret | Purpose | Requirements |
+|--------|---------|--------------|
+| `NPM_TOKEN` | Publish TypeScript SDK packages to npmjs.org | Granular Access Token with publish permission for the `@plantx` scope and 2FA bypass |
+| `RELEASE_TOKEN` | Push Go module tags and version-bump commits from CI | Personal Access Token (classic) with `repo` and `workflow` scopes. `GITHUB_TOKEN` cannot create refs that point to commits which modified workflow files, so a PAT is required. |
+
+Ordinary `NPM_TOKEN` access tokens will fail with `403 Forbidden`.
 
 ## 5. Local Commands
 

@@ -521,7 +521,9 @@ Portal 登录
 - npm 发布脚本：`pnpm ci:publish` → `pnpm -r --filter './kit/**' exec npm publish --access public`。
 - npm registry：`https://registry.npmjs.org`。
 - Go modules 通过 `git tag` 发布到默认 Go module proxy（`proxy.golang.org`）。
-- 必需 secret：`NPM_TOKEN`（需为 Granular Access Token，带 `@plantx` scope 的 publish 权限并启用 **Bypass 2FA**）。
+- 必需 secret：
+  - `NPM_TOKEN`：Granular Access Token，带 `@plantx` scope 的 publish 权限并启用 **Bypass 2FA**。
+  - `RELEASE_TOKEN`：Personal Access Token（classic），需勾选 `repo` 与 `workflow` scope，用于在 CI 中创建 Go module tag 并推送版本变更回 `main`。`GITHUB_TOKEN` 默认没有 `workflow` scope，无法推送指向包含 workflow 文件变更的 tag。
 
 ### 11.5 `Commitlint`
 

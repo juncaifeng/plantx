@@ -15,6 +15,9 @@ jobs:
         with:
           # We need the full history so we can commit the version bump back to main.
           fetch-depth: 0
+          # RELEASE_TOKEN must have `contents:write` and `workflow` scopes so that
+          # tags pointing to workflow-modifying commits can be pushed by the workflow.
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
@@ -55,8 +58,6 @@ jobs:
               echo "Created and pushed $tag"
             fi
           done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit version bump back to main
         run: |
