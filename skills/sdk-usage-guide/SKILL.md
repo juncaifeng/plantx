@@ -8,8 +8,8 @@ description: >
   business services or micro-frontends on PlantX.
 metadata:
   author: PlantX Platform Team
-  version: "1.1"
-  updated: "2026-06-23"
+  version: "1.2"
+  updated: "2026-06-24"
 ---
 
 # PlantX SDK Usage Guide
@@ -37,9 +37,9 @@ PlantX is a multi-tenant micro-frontend + microservices platform:
 | Package | Language/Framework | Purpose |
 |---------|-------------------|---------|
 | `@plantx/kit-sdk-api` | TypeScript | HTTP clients for platform services (registry, iam, tenant, gateway, audit) |
-| `@plantx/kit-sdk-kit` | React | React context and hooks built on `kit-sdk-api`, including `useKitUser`, `useKitTenant`, `useKitPermission`, `useApplications`, `useMenus`, `useMicroApps` |
+| `@plantx/kit-sdk-kit` | React | React context and hooks built on `kit-sdk-api`, including `useKitUser`, `useKitTenant`, `useKitPermission`, `useApplications`, `useMenus`, `useMicroApps`. `useMenus`/`useMicroApps` filter online resources by default |
 | `@plantx/kit-ui` | React | Minimal placeholder UI components (`KitLayout`, `UserMenu`). Depends on antd but does not yet use antd components internally |
-| `github.com/plantx/kit/kit-go` | Go | Server framework with auth, authz, db, events, and gateway registration |
+| `github.com/plantx/kit/kit-go` | Go | Server framework with auth, authz, db, events, and gateway registration. `gateway.AutoRegister` supports `WithApplication`, `WithMicroApp`, and `WithMenu` |
 
 ## 3. Frontend Development
 
@@ -150,7 +150,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 ### 3.7 Data-Fetching Hooks
 
-`@plantx/kit-sdk-kit` also provides hooks that load platform registry data:
+`@plantx/kit-sdk-kit` also provides hooks that load platform registry data. By default `useMenus` and `useMicroApps` only return `RESOURCE_STATUS_ONLINE` resources so the UI hides menus and micro-apps whose backend service is offline. Pass `includeOffline: true` when you need to show or manage offline resources (e.g. in an admin console).
 
 ```tsx
 import {
@@ -164,6 +164,9 @@ function Navigation() {
   const { activeApplications, loading } = useApplications();
   const { menus } = useMenus();
   const { microApps } = useMicroApps({ applicationId: 'demo' });
+
+  // Admin view that also lists offline resources
+  const { menus: allMenus } = useMenus({ includeOffline: true });
 
   if (loading) return <div>Loading...</div>;
 
@@ -287,7 +290,7 @@ func main() {
 
 ### 4.3 Register Service with Platform
 
-Use `gateway.AutoRegister` to register with `registry-service` on startup:
+Use `gateway.AutoRegister` to register with `registry-service` on startup. A service can declare its application, micro-frontend manifest, and portal menus in one place:
 
 ```go
 gateway.AutoRegister("order-service",
@@ -306,6 +309,22 @@ gateway.AutoRegister("order-service",
         MenuLabelKey:      "nav.orders",
         RequirePermission: "order:read",
     }),
+    gateway.WithMenu(gateway.Menu{
+        LabelKey:          "nav.orders.list",
+        Route:             "/order",
+        Icon:              "ShoppingCartOutlined",
+        SortOrder:         10,
+        MicroAppName:      "order-ui",
+        RequirePermission: "order:read",
+    }),
+    gateway.WithMenu(gateway.Menu{
+        LabelKey:          "nav.orders.settings",
+        Route:             "/order/settings",
+        Icon:              "SettingOutlined",
+        SortOrder:         20,
+        MicroAppName:      "order-ui",
+        RequirePermission: "order:admin",
+    }),
     gateway.WithGRPCHost("order-service:8080"),
     gateway.WithRESTPrefix("/api/order/v1"),
     gateway.WithRegistryAddr("registry-service:8080"),
@@ -319,6 +338,8 @@ gateway.AutoRegister("order-service",
 - REST prefix: env `<SERVICE_UPPER>_REST_PREFIX`, default `/api/<base>/v1` (strips `-service`)
 
 For `order-service`, the default REST prefix is `/api/order/v1`.
+
+**Idempotency**: menu registration is upserted by `(application_id, label_key, route)`. Restarting a service updates existing menus instead of creating duplicates. The service lifecycle state machine sets menus and micro-apps `OFFLINE` when the service stops and back to `ONLINE` when it starts.
 
 ### 4.4 Route Registration
 
@@ -386,10 +407,11 @@ The platform portal uses these endpoints to render navigation and load micro-fro
 ## 7. Frontend-Backend Integration Flow
 
 1. Backend implements gRPC service and declares authz actions.
-2. Backend starts with `gateway.AutoRegister`, registering service, application, and micro-app with `registry-service`.
+2. Backend starts with `gateway.AutoRegister`, registering service, application, micro-app, and menus with `registry-service`.
 3. The platform API gateway (nginx/apisix) routes `/api/order/v1/...` to the order service based on registry data.
 4. Frontend uses `@plantx/kit-sdk-api` to call `/api/order/v1/...` through the API gateway.
-5. The portal loads the micro-app from `bundleUrl` and renders the menu entry.
+5. The portal uses `useMenus` / `useMicroApps` to load online resources and render navigation / load micro-frontends.
+6. When the service stops, the Temporal lifecycle workflow marks related menus and micro-apps `OFFLINE`; they become visible again after the service restarts.
 
 ## 8. Local Environment Variables
 
@@ -422,6 +444,8 @@ Authentication and authorization are optional at runtime unless the correspondin
 | 401 from frontend | Check `getToken` returns a valid access token; handle expiration |
 | Backend fails to register | Verify `REGISTRY_SERVICE_GRPC_ADDR` and service name uniqueness |
 | Micro-app missing from menu | Check `WithApplication` key, `RequirePermission`, and gateway route sync |
+| Menu missing after service restart | Menus are upserted by `(application_id, label_key, route)`; verify the menu still has the same key/route and the service lifecycle workflow completed |
+| Duplicate menus after restart | Should not happen with menu upsert; check migration `008_menus_upsert` has been applied |
 | Permission denied | Verify proto authz action and IAM role assignment |
 | Route not proxied | Verify `registry-service` has the service's `rest_prefix` and nginx/apisix has synced routes |
 
