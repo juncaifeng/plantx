@@ -2,13 +2,13 @@
 name: development-workflow
 description: >
   Provides the PlantX development workflow conventions including Conventional Commits,
-  code generation with buf/sqlc, CI/CD pipeline behavior, SDK release via Changesets,
+  code generation with buf/sqlc, CI/CD pipeline behavior, SDK release via git tags,
   and local development commands. Use when a developer or agent needs to understand
   how to contribute code, run generators, or release packages in the PlantX monorepo.
 metadata:
   author: PlantX Platform Team
-  version: "1.1"
-  updated: "2026-06-23"
+  version: "1.2"
+  updated: "2026-06-24"
 ---
 
 # PlantX Development Workflow
@@ -139,15 +139,26 @@ A separate `.github/workflows/release.yml` exists for tag-based releases and cur
 
 ## 4. SDK Release
 
-SDK packages are released with [Changesets](https://github.com/changesets/changesets).
+SDK packages (`kit/*`) are released by pushing a git tag. The tag version becomes the version for all published kit packages.
 
 ```bash
-pnpm changeset
+# Tag format must be v<semver>, for example:
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-Select affected packages and bump type (`patch`/`minor`/`major`).
+The `Release SDK` workflow (`.github/workflows/release-sdk.yml`) then:
 
-The `Release SDK` workflow (`.github/workflows/release-sdk.yml`) creates a Release PR when changesets exist, or publishes directly to npmjs.org when no pending changesets remain.
+1. Builds all `kit/*` packages.
+2. Bumps every published `kit/*` package version to the tag version.
+3. Publishes to npmjs.org.
+4. Commits the `package.json` version bumps back to `main`.
+
+### Versioning Rules
+
+- Use a single monorepo tag (`v0.2.0`) for all kit packages.
+- Tag `v0.2.0` will set `@plantx/kit-sdk-api`, `@plantx/kit-sdk-kit`, and `@plantx/kit-ui` to `0.2.0`.
+- If a package should not be published, ensure it is excluded from the `ci:publish` script in `package.json`.
 
 ### NPM Token
 
@@ -173,15 +184,15 @@ done
 # Build SDKs
 pnpm -r --filter './kit/**' run build
 
-# Add a changeset
-pnpm changeset
+# Bump kit package versions locally (dry-run example)
+pnpm -r --filter './kit/**' exec npm version 0.2.0 --no-git-tag-version
 ```
 
 ## 6. Pull Request Guidelines
 
 1. Keep PRs small and focused.
 2. Regenerate and commit generated code before opening a PR.
-3. Include a changeset for user-visible SDK changes.
+3. For user-visible SDK changes, push a new `v<semver>` tag after merging to release.
 4. Ensure all CI checks pass before merging.
 5. Avoid direct pushes to `main`; use pull requests.
 

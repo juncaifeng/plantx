@@ -2,7 +2,6 @@ name: Release SDK
 
 on:
   push:
-    branches: [main]
     tags: ['v*']
 
 jobs:
@@ -11,9 +10,11 @@ jobs:
     permissions:
       contents: write
       packages: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # We need the full history so we can commit the version bump back to main.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -28,18 +29,23 @@ jobs:
       - name: Build kit SDK packages
         run: pnpm -r --filter './kit/**' run build
 
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm ci:publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Bump kit package versions from tag
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "Bumping kit packages to version $VERSION"
+          pnpm -r --filter './kit/**' exec npm version "$VERSION" --no-git-tag-version
 
-      # Fallback for tag pushes that are not handled by changesets (e.g. manual tags).
-      - name: Publish on tag
-        if: startsWith(github.ref, 'refs/tags/v') && steps.changesets.outputs.published != 'true'
+      - name: Publish kit packages to npm
         run: pnpm ci:publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit version bump back to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kit/**/package.json
+          git commit -m "chore(release): bump kit packages to ${{ github.ref_name }}" || true
+          git push origin HEAD:main || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

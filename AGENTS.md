@@ -513,8 +513,9 @@ Portal 登录
 
 文件：`.github/workflows/release-sdk.yml`
 
-- 使用 Changesets 管理版本。
-- 当存在 changeset 时创建 Release PR；无 changeset 时直接发布所有未发布的 package。
+- 通过 git tag 触发（`v*`）。
+- 标签版本即为所有 `kit/*` 包的发布版本，例如 `v0.2.0` 会把 `@plantx/kit-sdk-api`、`@plantx/kit-sdk-kit`、`@plantx/kit-ui` 都发布为 `0.2.0`。
+- Workflow 会自动 bump `kit/**/package.json` 版本、执行 `pnpm ci:publish`，并将版本变更提交回 `main`。
 - 发布脚本：`pnpm ci:publish` → `pnpm -r --filter './kit/**' exec npm publish --access public`。
 - 目标 registry：`https://registry.npmjs.org`。
 - 必需 secret：`NPM_TOKEN`（需为 Granular Access Token，带 `@plantx` scope 的 publish 权限并启用 **Bypass 2FA**）。
@@ -570,7 +571,7 @@ docker build -f services/order/Dockerfile -t plantx/order-service:latest .
 
 - [x] 配置 buf openapi 生成插件，输出归一化到 `openapi/<service-short>.yaml`
 - [x] 建立 `kit/kit-sdk-api/<svc>` 模块（iam / tenant / gateway / audit / registry）并配置 subpath exports
-- [x] CI/CD 自动生成并发布 SDK（`release-sdk.yml` 通过 changesets 自动版本/发布到 npmjs.org 的 `@plantx` scope）
+- [x] CI/CD 自动生成并发布 SDK（`release-sdk.yml` 通过 git tag 自动版本/发布到 npmjs.org 的 `@plantx` scope）
 - [x] 平台 admin UI 与 Portal 已迁移到 `@plantx/kit-sdk-api/<svc>` 调用
 
 ### Phase 4：Admin 控制台
