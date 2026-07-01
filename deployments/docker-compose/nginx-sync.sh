@@ -51,48 +51,19 @@ render_conf() {
     micro_apps_json='{"microApps":[]}'
   fi
 
-  # Upstreams
-  {
-    echo "upstream mock_auth { server mock-auth:8080; }"
-    echo "upstream portal { server portal:80; }"
-    echo "$routes_json" | jq -r '
-      .routes[]? |
-      select(.name and (.name | length) > 0 and .upstreamHost and (.upstreamHost | length) > 0) |
-      "\(.name | gsub("-"; "_"))|\(.upstreamHost)"
-    ' | while IFS='|' read -r upstream_name upstream_host; do
-      host_name=$(echo "$upstream_host" | cut -d: -f1)
-      if getent hosts "$host_name" >/dev/null 2>&1; then
-        echo "upstream ${upstream_name} { server ${upstream_host}; }"
-      else
-        echo "nginx-sync: skipping unresolved upstream ${upstream_name} -> ${upstream_host}" >&2
-      fi
-    done
-    echo "$micro_apps_json" | jq -r '
-      .microApps[]? |
-      select(.name and (.name | length) > 0 and .upstream and (.upstream | length) > 0) |
-      "\(.name | gsub("-"; "_"))|\(.upstream)"
-    ' | while IFS='|' read -r upstream_name upstream_host; do
-      host_name=$(echo "$upstream_host" | cut -d: -f1)
-      if getent hosts "$host_name" >/dev/null 2>&1; then
-        echo "upstream ${upstream_name} { server ${upstream_host}; }"
-      else
-        echo "nginx-sync: skipping unresolved upstream ${upstream_name} -> ${upstream_host}" >&2
-      fi
-    done
-  } > /etc/nginx/conf.d/upstreams.conf
-
   # Rate limit zones
   {
     echo "$routes_json" | jq -r '.routes[]? | select((.policy.rateLimitRps // 0) > 0) | "limit_req_zone $binary_remote_addr zone=\(.name | gsub("-"; "_"))_lim:1m rate=\(.policy.rateLimitRps)r/s;"'
   } > /etc/nginx/conf.d/rate-limits.conf
 
-  # Service locations (only for routes whose upstream resolved)
+  # Service locations (use nginx variables so DNS resolution happens at request time)
   {
     echo "$routes_json" | jq -r '
       .routes[]? |
       select(.name and (.name | length) > 0 and .restPrefix and (.restPrefix | length) > 0 and .upstreamHost and (.upstreamHost | length) > 0) |
       "    location \(.restPrefix) {\n" +
-      "        proxy_pass http://\(.name | gsub("-"; "_"))\(.restPrefix);\n" +
+      "        set $target \(.upstreamHost);\n" +
+      "        proxy_pass http://$target\(.restPrefix);\n" +
       (if (.policy.rateLimitRps // 0) > 0 then "        limit_req zone=\(.name | gsub("-"; "_"))_lim burst=20 nodelay;\n" else "" end) +
       (if (.policy.authRequired // true) | not then "        # auth disabled by policy\n" else "" end) +
       "        proxy_set_header Host $host;\n" +
@@ -107,9 +78,10 @@ render_conf() {
       .microApps[]? |
       select(.name and (.name | length) > 0 and .bundleUrl and (.bundleUrl | length) > 0 and (.bundleUrl | startswith("http://") | not) and (.bundleUrl | startswith("https://") | not)) |
       (.upstream // "") as $up |
-      (if ($up | length) > 0 and ($up | split(":") | .[0] | length) > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
+      (if ($up | length) > 0 and ($up | split(":") | .[0] | length) > 0 then $up else "portal" end) as $target |
       "    location \(.bundleUrl | sub("/[^/]+$"; "/")) {\n" +
-      "        proxy_pass http://\($target)\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
+      "        set $target \($target);\n" +
+      "        proxy_pass http://$target\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
       "        proxy_set_header Host $host;\n" +
       "    }"
     '
@@ -118,22 +90,26 @@ render_conf() {
   # Static shared locations
   cat > /etc/nginx/conf.d/static-locations.conf <<'EOF'
     location /auth/ {
-        proxy_pass http://mock_auth/;
+        set $target mock-auth:8080;
+        proxy_pass http://$target/;
         proxy_set_header Host $host;
     }
 
     location /oauth/token {
-        proxy_pass http://mock_auth/oauth/token;
+        set $target mock-auth:8080;
+        proxy_pass http://$target/oauth/token;
         proxy_set_header Host $host;
     }
 
     location /openapi/ {
-        proxy_pass http://portal/openapi/;
+        set $target portal:80;
+        proxy_pass http://$target/openapi/;
         proxy_set_header Host $host;
     }
 
     location / {
-        proxy_pass http://portal/;
+        set $target portal:80;
+        proxy_pass http://$target/;
         proxy_set_header Host $host;
     }
 EOF
