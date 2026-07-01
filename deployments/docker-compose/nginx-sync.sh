@@ -63,7 +63,7 @@ render_conf() {
       select(.name and (.name | length) > 0 and .restPrefix and (.restPrefix | length) > 0 and .upstreamHost and (.upstreamHost | length) > 0) |
       "    location \(.restPrefix) {\n" +
       "        set $target \(.upstreamHost);\n" +
-      "        proxy_pass http://$target\(.restPrefix);\n" +
+      "        proxy_pass http://$target$request_uri;\n" +
       (if (.policy.rateLimitRps // 0) > 0 then "        limit_req zone=\(.name | gsub("-"; "_"))_lim burst=20 nodelay;\n" else "" end) +
       (if (.policy.authRequired // true) | not then "        # auth disabled by policy\n" else "" end) +
       "        proxy_set_header Host $host;\n" +
@@ -81,7 +81,7 @@ render_conf() {
       (if ($up | length) > 0 and ($up | split(":") | .[0] | length) > 0 then $up else "portal" end) as $target |
       "    location \(.bundleUrl | sub("/[^/]+$"; "/")) {\n" +
       "        set $target \($target);\n" +
-      "        proxy_pass http://$target\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
+      "        proxy_pass http://$target$request_uri;\n" +
       "        proxy_set_header Host $host;\n" +
       "    }"
     '
