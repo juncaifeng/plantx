@@ -54,6 +54,19 @@ interface AppRoutesProps {
 function AppRoutes({ context, onLogin, onLogout }: AppRoutesProps) {
   const { microApps } = useMicroApps();
 
+  // Sort micro-apps by route depth (descending) so React Router matches more
+  // specific routes before wildcard parent routes. For example:
+  // /novaai/embedding-models/* must outrank /novaai/*.
+  const sortedMicroApps = useMemo(
+    () =>
+      [...microApps].sort((a, b) => {
+        const depthA = a.route.split('/').filter(Boolean).length;
+        const depthB = b.route.split('/').filter(Boolean).length;
+        return depthB - depthA;
+      }),
+    [microApps]
+  );
+
   return (
     <BrowserRouter>
       <Routes>
@@ -62,10 +75,10 @@ function AppRoutes({ context, onLogin, onLogout }: AppRoutesProps) {
         ) : (
           <Route path="/" element={<Layout onLogout={onLogout} />}>
             <Route index element={<HomePage />} />
-            {microApps.map((app) => (
+            {sortedMicroApps.map((app) => (
               <Route
                 key={app.name}
-                path={app.route.replace(/^\//, '')}
+                path={app.route.replace(/^\//, '') + '/*'}
                 element={<MicroAppPage manifest={app} />}
               />
             ))}

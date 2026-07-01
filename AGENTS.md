@@ -340,6 +340,7 @@ YAML 内支持 `${VAR:-default}` 环境变量展开，便于同一镜像在 Dock
 - 从 `registry-service` 拉取菜单和微前端列表
 - 根据用户权限过滤菜单
 - 通过 qiankun 加载子应用
+- 微应用路由使用 `path/*` 通配匹配，因此一个微应用可以处理整个路由前缀（如 `/novaai/*`），也可以注册多个独立微应用分别挂载到不同子路径（如 `/novaai/embedding-models`、`/novaai/vector-stores`）
 
 ### 7.2 业务微前端职责
 

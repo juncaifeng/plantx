@@ -394,11 +394,64 @@ if err != nil {
 
 Environment variable expansion supports `${VAR}` and `${VAR:-default}`. This lets the same image run in Docker Compose (using defaults) and in production (using real IPs/hostnames).
 
-### 4.5 Route Registration
+### 4.5 Micro-App Routing Patterns
+
+The PlantX portal uses React Router with wildcard matching for micro-app routes, so both of the following patterns are supported.
+
+#### Pattern A: One micro-app handles a whole route prefix
+
+Register a single micro-app at `/novaai`. The portal will route `/novaai/*` to that micro-app, and its internal router handles sub-pages like `/novaai/embedding-models` and `/novaai/vector-stores`.
+
+```yaml
+micro_apps:
+  - name: novaai-ui
+    route: /novaai
+    bundle_url: /apps/novaai-ui/novaai-ui.js
+    upstream: novaai-ui:80
+
+menus:
+  - label_key: nav.novaai.embedding_models
+    route: /novaai/embedding-models
+    micro_app_name: novaai-ui
+
+  - label_key: nav.novaai.vector_stores
+    route: /novaai/vector-stores
+    micro_app_name: novaai-ui
+```
+
+#### Pattern B: Multiple independent micro-apps under one application
+
+Register separate micro-apps for each sub-feature. They can share the same `application.key` so they appear under the same product menu group.
+
+```yaml
+micro_apps:
+  - name: novaai-embedding-models
+    route: /novaai/embedding-models
+    bundle_url: /apps/novaai-embedding-models/novaai-embedding-models.js
+    upstream: novaai-embedding-models:80
+
+  - name: novaai-vector-stores
+    route: /novaai/vector-stores
+    bundle_url: /apps/novaai-vector-stores/novaai-vector-stores.js
+    upstream: novaai-vector-stores:80
+
+menus:
+  - label_key: nav.novaai.embedding_models
+    route: /novaai/embedding-models
+    micro_app_name: novaai-embedding-models
+
+  - label_key: nav.novaai.vector_stores
+    route: /novaai/vector-stores
+    micro_app_name: novaai-vector-stores
+```
+
+Routes are sorted by depth so more specific paths are matched first (`/novaai/embedding-models` before `/novaai`).
+
+### 4.6 Route Registration
 
 `registry-service` records the service's `rest_prefix` as a wildcard route (`{Path: svc.RestPrefix, Method: "*"}`). Individual REST paths are handled by each service's own grpc-gateway. The platform API gateway (nginx/apisix) uses registry data to route `/api/order/v1/...` to the backend.
 
-### 4.6 Declare Permissions
+### 4.7 Declare Permissions
 
 In the proto file:
 
@@ -419,7 +472,7 @@ rpc ListOrders(ListOrdersRequest) returns (OrderList) {
 
 The `kit-go` authz interceptor validates that the caller has the required permission.
 
-### 4.7 Call Platform Services from Go
+### 4.8 Call Platform Services from Go
 
 ```go
 import (
