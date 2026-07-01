@@ -3,6 +3,7 @@ service:
   grpc_host: ${DEMO_SERVICE_GRPC_HOST:-demo-service:8080}
   rest_prefix: /api/demo/v1
   registry_addr: ${REGISTRY_SERVICE_GRPC_ADDR:-registry-service:8080}
+  iam_addr: ${IAM_SERVICE_ADDR:-iam-service:8081}
 
 application:
   key: demo
@@ -10,6 +11,22 @@ application:
   label_key: nav.demo
   sort_order: 100
   status: ACTIVE
+
+permissions:
+  - name: item:list
+    resource: item
+    operation: list
+    description: View demo items
+
+  - name: setting:list
+    resource: setting
+    operation: list
+    description: View configuration settings
+
+  - name: setting:admin
+    resource: setting
+    operation: admin
+    description: Manage system settings
 
 micro_apps:
   - name: demo-ui

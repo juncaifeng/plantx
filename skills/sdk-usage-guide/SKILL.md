@@ -8,8 +8,8 @@ description: >
   business services or micro-frontends on PlantX.
 metadata:
   author: PlantX Platform Team
-  version: "1.3"
-  updated: "2026-06-24"
+  version: "1.4"
+  updated: "2026-07-01"
 ---
 
 # PlantX SDK Usage Guide
@@ -370,6 +370,17 @@ micro_apps:
     require_permission: order:read
     upstream: ${ORDER_UI_UPSTREAM:-order-ui:80}
 
+permissions:
+  - name: order:read
+    resource: order
+    operation: read
+    description: Read orders
+
+  - name: order:admin
+    resource: order
+    operation: admin
+    description: Administer orders
+
 menus:
   - label_key: nav.orders.list
     route: /order
@@ -393,6 +404,8 @@ if err != nil {
 ```
 
 Environment variable expansion supports `${VAR}` and `${VAR:-default}`. This lets the same image run in Docker Compose (using defaults) and in production (using real IPs/hostnames).
+
+**Permissions**: the `permissions` section declares the RBAC permissions that this service exposes. On startup they are synced to `iam-service` so platform admins can compose roles in `registry-admin-ui`. Any `require_permission` referenced by menus or micro-apps must exist in the service's declared permissions or already in IAM.
 
 ### 4.5 Micro-App Routing Patterns
 
