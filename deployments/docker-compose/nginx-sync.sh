@@ -51,16 +51,37 @@ render_conf() {
     micro_apps_json='{"microApps":[]}'
   fi
 
+  # Helper: check whether a host resolves inside the container.
+  host_resolves() {
+    getent hosts "$1" >/dev/null 2>&1
+  }
+
   # Upstreams
   {
     echo "upstream mock_auth { server mock-auth:8080; }"
     echo "upstream portal { server portal:80; }"
-    echo "$routes_json" | jq -r '.routes[]? | "upstream \(.name | gsub("-"; "_")) { server \(.upstreamHost); }"'
+    echo "$routes_json" | jq -r '
+      .routes[]? |
+      select(.name and (.name | length) > 0 and .upstreamHost and (.upstreamHost | length) > 0) |
+      "\(.name | gsub("-"; "_"))|\(.upstreamHost)"
+    ' | while IFS='|' read -r upstream_name upstream_host; do
+      if host_resolves "$(echo "$upstream_host" | cut -d: -f1)"; then
+        echo "upstream ${upstream_name} { server ${upstream_host}; }"
+      else
+        echo "nginx-sync: skipping unresolved upstream ${upstream_name} -> ${upstream_host}" >&2
+      fi
+    done
     echo "$micro_apps_json" | jq -r '
       .microApps[]? |
-      select(.upstream and (.upstream | length) > 0) |
-      "upstream \(.name | gsub("-"; "_")) { server \(.upstream); }"
-    '
+      select(.name and (.name | length) > 0 and .upstream and (.upstream | length) > 0) |
+      "\(.name | gsub("-"; "_"))|\(.upstream)"
+    ' | while IFS='|' read -r upstream_name upstream_host; do
+      if host_resolves "$(echo "$upstream_host" | cut -d: -f1)"; then
+        echo "upstream ${upstream_name} { server ${upstream_host}; }"
+      else
+        echo "nginx-sync: skipping unresolved upstream ${upstream_name} -> ${upstream_host}" >&2
+      fi
+    done
   } > /etc/nginx/conf.d/upstreams.conf
 
   # Rate limit zones
@@ -68,10 +89,11 @@ render_conf() {
     echo "$routes_json" | jq -r '.routes[]? | select((.policy.rateLimitRps // 0) > 0) | "limit_req_zone $binary_remote_addr zone=\(.name | gsub("-"; "_"))_lim:1m rate=\(.policy.rateLimitRps)r/s;"'
   } > /etc/nginx/conf.d/rate-limits.conf
 
-  # Service locations
+  # Service locations (only for routes whose upstream resolved)
   {
     echo "$routes_json" | jq -r '
       .routes[]? |
+      select(.name and (.name | length) > 0 and .restPrefix and (.restPrefix | length) > 0 and .upstreamHost and (.upstreamHost | length) > 0) |
       "    location \(.restPrefix) {\n" +
       "        proxy_pass http://\(.name | gsub("-"; "_"))\(.restPrefix);\n" +
       (if (.policy.rateLimitRps // 0) > 0 then "        limit_req zone=\(.name | gsub("-"; "_"))_lim burst=20 nodelay;\n" else "" end) +
@@ -86,7 +108,8 @@ render_conf() {
   {
     echo "$micro_apps_json" | jq -r '
       .microApps[]? |
-      (if (.upstream // "") | length > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
+      select(.name and (.name | length) > 0 and .bundleUrl and (.bundleUrl | length) > 0) |
+      (if (.upstream // "") | length > 0 and (.upstream | split(":") | .[0] | length) > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
       "    location \(.bundleUrl | sub("/[^/]+$"; "/")) {\n" +
       "        proxy_pass http://\($target)\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
       "        proxy_set_header Host $host;\n" +
