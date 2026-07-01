@@ -51,11 +51,6 @@ render_conf() {
     micro_apps_json='{"microApps":[]}'
   fi
 
-  # Helper: check whether a host resolves inside the container.
-  host_resolves() {
-    getent hosts "$1" >/dev/null 2>&1
-  }
-
   # Upstreams
   {
     echo "upstream mock_auth { server mock-auth:8080; }"
@@ -65,7 +60,8 @@ render_conf() {
       select(.name and (.name | length) > 0 and .upstreamHost and (.upstreamHost | length) > 0) |
       "\(.name | gsub("-"; "_"))|\(.upstreamHost)"
     ' | while IFS='|' read -r upstream_name upstream_host; do
-      if host_resolves "$(echo "$upstream_host" | cut -d: -f1)"; then
+      host_name=$(echo "$upstream_host" | cut -d: -f1)
+      if getent hosts "$host_name" >/dev/null 2>&1; then
         echo "upstream ${upstream_name} { server ${upstream_host}; }"
       else
         echo "nginx-sync: skipping unresolved upstream ${upstream_name} -> ${upstream_host}" >&2
@@ -76,7 +72,8 @@ render_conf() {
       select(.name and (.name | length) > 0 and .upstream and (.upstream | length) > 0) |
       "\(.name | gsub("-"; "_"))|\(.upstream)"
     ' | while IFS='|' read -r upstream_name upstream_host; do
-      if host_resolves "$(echo "$upstream_host" | cut -d: -f1)"; then
+      host_name=$(echo "$upstream_host" | cut -d: -f1)
+      if getent hosts "$host_name" >/dev/null 2>&1; then
         echo "upstream ${upstream_name} { server ${upstream_host}; }"
       else
         echo "nginx-sync: skipping unresolved upstream ${upstream_name} -> ${upstream_host}" >&2
@@ -109,7 +106,8 @@ render_conf() {
     echo "$micro_apps_json" | jq -r '
       .microApps[]? |
       select(.name and (.name | length) > 0 and .bundleUrl and (.bundleUrl | length) > 0) |
-      (if (.upstream // "") | length > 0 and (.upstream | split(":") | .[0] | length) > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
+      (.upstream // "") as $up |
+      (if ($up | length) > 0 and ($up | split(":") | .[0] | length) > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
       "    location \(.bundleUrl | sub("/[^/]+$"; "/")) {\n" +
       "        proxy_pass http://\($target)\(.bundleUrl | sub("/[^/]+$"; "/"));\n" +
       "        proxy_set_header Host $host;\n" +
