@@ -15,9 +15,6 @@ jobs:
         with:
           # We need the full history so we can commit the version bump back to main.
           fetch-depth: 0
-          # RELEASE_TOKEN must have `contents:write` and `workflow` scopes so that
-          # tags pointing to workflow-modifying commits can be pushed by the workflow.
-          token: ${{ secrets.RELEASE_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
@@ -43,11 +40,24 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # Go module tags point to commits that may have modified workflow files.
+      # GITHUB_TOKEN cannot create such tags, so RELEASE_TOKEN (a PAT with the
+      # `workflow` scope) is required. If it is not configured, this step fails
+      # but the npm publish above still succeeds.
       - name: Tag Go modules
+        id: tag_go
+        continue-on-error: true
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "${RELEASE_TOKEN}" ]; then
+            git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          else
+            echo "RELEASE_TOKEN not set; Go module tags may fail if the commit touched workflow files"
+          fi
+
           for module in kit/kit-go kit/kit-go/gateway kit/kit-cli; do
             tag="${module}/v${VERSION}"
             if git rev-parse "$tag" >/dev/null 2>&1; then
@@ -58,6 +68,8 @@ jobs:
               echo "Created and pushed $tag"
             fi
           done
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Commit version bump back to main
         run: |
