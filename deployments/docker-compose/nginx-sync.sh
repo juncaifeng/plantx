@@ -101,11 +101,11 @@ render_conf() {
     '
   } > /etc/nginx/conf.d/locations.conf
 
-  # Micro-app locations
+  # Micro-app locations (skip absolute bundle URLs; they are loaded directly)
   {
     echo "$micro_apps_json" | jq -r '
       .microApps[]? |
-      select(.name and (.name | length) > 0 and .bundleUrl and (.bundleUrl | length) > 0) |
+      select(.name and (.name | length) > 0 and .bundleUrl and (.bundleUrl | length) > 0 and (.bundleUrl | startswith("http://") | not) and (.bundleUrl | startswith("https://") | not)) |
       (.upstream // "") as $up |
       (if ($up | length) > 0 and ($up | split(":") | .[0] | length) > 0 then "\(.name | gsub("-"; "_"))" else "portal" end) as $target |
       "    location \(.bundleUrl | sub("/[^/]+$"; "/")) {\n" +
