@@ -7,8 +7,8 @@ description: >
   how to contribute code, run generators, or release packages in the PlantX monorepo.
 metadata:
   author: PlantX Platform Team
-  version: "1.2"
-  updated: "2026-06-24"
+  version: "1.3"
+  updated: "2026-07-01"
 ---
 
 # PlantX Development Workflow
@@ -176,10 +176,10 @@ Inside the PlantX monorepo, services continue to use `replace` directives in `go
 
 ### Required Secrets
 
-| Secret | Purpose | Requirements |
-|--------|---------|--------------|
-| `NPM_TOKEN` | Publish TypeScript SDK packages to npmjs.org | Granular Access Token with publish permission for the `@plantx` scope and 2FA bypass |
-| `RELEASE_TOKEN` | Push Go module tags and version-bump commits from CI | Personal Access Token (classic) with `repo` and `workflow` scopes. `GITHUB_TOKEN` cannot create refs that point to commits which modified workflow files, so a PAT is required. |
+| Secret | Purpose | Required? | Requirements |
+|--------|---------|-----------|--------------|
+| `NPM_TOKEN` | Publish TypeScript SDK packages to npmjs.org | **Required** | Granular Access Token with publish permission for the `@plantx` scope and 2FA bypass |
+| `RELEASE_TOKEN` | Push Go module tags from CI | Recommended | Personal Access Token (classic) with `repo` and `workflow` scopes. Without it, Go module tags may fail when the release commit touched workflow files; npm publish still succeeds. |
 
 Ordinary `NPM_TOKEN` access tokens will fail with `403 Forbidden`.
 
