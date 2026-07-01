@@ -22,6 +22,7 @@ type testRegistryServer struct {
 	applications map[string]*api.Application
 	services     map[string]*api.Service
 	microApps    map[string]*api.MicroApp
+	menus        map[string]*api.Menu
 }
 
 func newTestRegistryServer() *testRegistryServer {
@@ -29,6 +30,7 @@ func newTestRegistryServer() *testRegistryServer {
 		applications: make(map[string]*api.Application),
 		services:     make(map[string]*api.Service),
 		microApps:    make(map[string]*api.MicroApp),
+		menus:        make(map[string]*api.Menu),
 	}
 }
 
@@ -122,6 +124,26 @@ func (s *testRegistryServer) ListMicroApps(_ context.Context, _ *api.ListMicroAp
 		out = append(out, m)
 	}
 	return &api.MicroAppList{MicroApps: out}, nil
+}
+
+func (s *testRegistryServer) CreateMenu(_ context.Context, req *api.CreateMenuRequest) (*api.Menu, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	m := &api.Menu{
+		Id:                fmt.Sprintf("menu-%d", len(s.menus)+1),
+		LabelKey:          req.GetLabelKey(),
+		Route:             req.GetRoute(),
+		Icon:              req.GetIcon(),
+		ParentId:          req.GetParentId(),
+		SortOrder:         req.GetSortOrder(),
+		MicroAppName:      req.GetMicroAppName(),
+		RequirePermission: req.GetRequirePermission(),
+		ApplicationId:     req.GetApplicationId(),
+		ApplicationKey:    req.GetApplicationKey(),
+		Status:            req.GetStatus(),
+	}
+	s.menus[m.GetId()] = m
+	return m, nil
 }
 
 func startTestRegistry(t *testing.T) (string, func()) {
