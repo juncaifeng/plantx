@@ -1,10 +1,12 @@
 package gateway
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/plantx/kit/kit-go/server"
 	registryapi "github.com/plantx/platform/registry-service/api"
@@ -17,6 +19,7 @@ type ServiceConfig struct {
 	GRPCHost     string `yaml:"grpc_host"`
 	RESTPrefix   string `yaml:"rest_prefix"`
 	RegistryAddr string `yaml:"registry_addr"`
+	IAMAddr      string `yaml:"iam_addr"`
 }
 
 // ApplicationConfig describes the product application.
@@ -50,12 +53,21 @@ type MenuConfig struct {
 	RequirePermission string `yaml:"require_permission"`
 }
 
+// PermissionConfig describes an RBAC permission exposed by the service.
+type PermissionConfig struct {
+	Name        string `yaml:"name"`
+	Resource    string `yaml:"resource"`
+	Operation   string `yaml:"operation"`
+	Description string `yaml:"description"`
+}
+
 // Config is the top-level YAML configuration for gateway registration.
 type Config struct {
 	Service      ServiceConfig       `yaml:"service"`
 	Application  ApplicationConfig   `yaml:"application"`
 	MicroApps    []MicroAppConfig    `yaml:"micro_apps"`
 	Menus        []MenuConfig        `yaml:"menus"`
+	Permissions  []PermissionConfig  `yaml:"permissions"`
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}:]+)(?::-([^}]*))?\}|\$([A-Za-z_][A-Za-z0-9_]*)`)
@@ -89,6 +101,7 @@ func expandConfig(cfg *Config) {
 	cfg.Service.GRPCHost = expandEnv(cfg.Service.GRPCHost)
 	cfg.Service.RESTPrefix = expandEnv(cfg.Service.RESTPrefix)
 	cfg.Service.RegistryAddr = expandEnv(cfg.Service.RegistryAddr)
+	cfg.Service.IAMAddr = expandEnv(cfg.Service.IAMAddr)
 
 	cfg.Application.Key = expandEnv(cfg.Application.Key)
 	cfg.Application.Name = expandEnv(cfg.Application.Name)
@@ -112,6 +125,13 @@ func expandConfig(cfg *Config) {
 		cfg.Menus[i].ParentID = expandEnv(cfg.Menus[i].ParentID)
 		cfg.Menus[i].MicroAppName = expandEnv(cfg.Menus[i].MicroAppName)
 		cfg.Menus[i].RequirePermission = expandEnv(cfg.Menus[i].RequirePermission)
+	}
+
+	for i := range cfg.Permissions {
+		cfg.Permissions[i].Name = expandEnv(cfg.Permissions[i].Name)
+		cfg.Permissions[i].Resource = expandEnv(cfg.Permissions[i].Resource)
+		cfg.Permissions[i].Operation = expandEnv(cfg.Permissions[i].Operation)
+		cfg.Permissions[i].Description = expandEnv(cfg.Permissions[i].Description)
 	}
 }
 
@@ -149,6 +169,8 @@ func toApplicationStatus(s string) registryapi.ApplicationStatus {
 // AutoRegisterFromConfig builds a GatewayRegistrar from a YAML config file.
 // It is a convenience wrapper around LoadConfig + AutoRegister for services
 // that prefer declarative registration over code-based options.
+// It also syncs declared RBAC permissions to iam-service when an iam_addr is
+// configured.
 func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 	cfg, err := LoadConfig(path)
 	if err != nil {
@@ -201,5 +223,86 @@ func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 		}))
 	}
 
-	return AutoRegister(cfg.Service.Name, opts...), nil
+	registrar := AutoRegister(cfg.Service.Name, opts...)
+
+	// Sync permissions to IAM when iam_addr is configured.
+	if len(cfg.Permissions) > 0 {
+		iamAddr := cfg.Service.IAMAddr
+		if iamAddr == "" {
+			iamAddr = defaultIAMAddr()
+		}
+		if iamAddr != "" {
+			client := NewIAMClient(iamAddr)
+			permissions := make([]Permission, len(cfg.Permissions))
+			for i, p := range cfg.Permissions {
+				permissions[i] = Permission{
+					Name:        p.Name,
+					Resource:    p.Resource,
+					Operation:   p.Operation,
+					Description: p.Description,
+				}
+			}
+			required := collectRequiredPermissions(cfg)
+			if err := syncAndValidatePermissions(client, permissions, required); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return registrar, nil
+}
+
+func defaultIAMAddr() string {
+	if v := getEnvAny("IAM_SERVICE_ADDR", "IAM_ADDR"); v != "" {
+		return v
+	}
+	return "iam-service:8081"
+}
+
+func getEnvAny(keys ...string) string {
+	for _, k := range keys {
+		if v := os.Getenv(k); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func collectRequiredPermissions(cfg *Config) []string {
+	seen := make(map[string]struct{})
+	var out []string
+	for _, m := range cfg.MicroApps {
+		if m.RequirePermission == "" {
+			continue
+		}
+		if _, ok := seen[m.RequirePermission]; ok {
+			continue
+		}
+		seen[m.RequirePermission] = struct{}{}
+		out = append(out, m.RequirePermission)
+	}
+	for _, m := range cfg.Menus {
+		if m.RequirePermission == "" {
+			continue
+		}
+		if _, ok := seen[m.RequirePermission]; ok {
+			continue
+		}
+		seen[m.RequirePermission] = struct{}{}
+		out = append(out, m.RequirePermission)
+	}
+	return out
+}
+
+func syncAndValidatePermissions(client *IAMClient, declared []Permission, required []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := client.SyncPermissions(ctx, declared); err != nil {
+		return fmt.Errorf("sync permissions to IAM: %w", err)
+	}
+	if err := client.ValidatePermissions(ctx, declared, required); err != nil {
+		return fmt.Errorf("validate permissions: %w", err)
+	}
+	return nil
 }

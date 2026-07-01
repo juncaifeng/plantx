@@ -35,6 +35,17 @@ menus:
     sort_order: 10
     micro_app_name: demo-ui
     require_permission: item:list
+
+permissions:
+  - name: item:list
+    resource: item
+    operation: list
+    description: List demo items
+
+  - name: setting:admin
+    resource: setting
+    operation: admin
+    description: Admin settings
 `
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatalf("write config: %v", err)
@@ -62,5 +73,11 @@ menus:
 	}
 	if len(cfg.Menus) != 1 || cfg.Menus[0].LabelKey != "nav.demo.home" {
 		t.Errorf("menus = %+v, want 1 nav.demo.home", cfg.Menus)
+	}
+	if len(cfg.Permissions) != 2 {
+		t.Errorf("permissions = %+v, want 2", cfg.Permissions)
+	}
+	if cfg.Permissions[0].Name != "item:list" {
+		t.Errorf("permission[0].name = %q, want item:list", cfg.Permissions[0].Name)
 	}
 }

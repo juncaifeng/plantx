@@ -22,6 +22,8 @@ import {
   type Route,
 } from '@plantx/kit-sdk-api/registry';
 import { ApplicationsTab } from './ApplicationsTab';
+import { PermissionsTab } from './PermissionsTab';
+import { RolesTab } from './RolesTab';
 import { RoutePoliciesTab } from './RoutePoliciesTab';
 
 export function RegistryAdminPage() {
@@ -390,6 +392,8 @@ export function RegistryAdminPage() {
           { key: 'services', label: 'Services', children: servicesTab },
           { key: 'menus', label: 'Menus', children: menusTab },
           { key: 'micro-apps', label: 'Micro Apps', children: microAppsTab },
+          { key: 'permissions', label: 'Permissions', children: <PermissionsTab /> },
+          { key: 'roles', label: 'Roles', children: <RolesTab /> },
           { key: 'route-policies', label: 'Route Policies', children: <RoutePoliciesTab /> },
         ]}
       />

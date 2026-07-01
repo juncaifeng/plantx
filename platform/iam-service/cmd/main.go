@@ -93,6 +93,13 @@ func main() {
 		Config:         cfg,
 		DB:             sqldb,
 		Readiness:      readiness,
+		AuthExcludedMethods: []string{
+			// Allow services to self-register their permission catalog and
+			// allow the public/portal to read the permission catalog without
+			// requiring an authenticated session.
+			"/plantx.iam.v1.IAMService/CreatePermission",
+			"/plantx.iam.v1.IAMService/ListPermissions",
+		},
 		GatewayRegistrar: gateway.AutoRegister("iam-service",
 			gateway.WithApplication(gateway.Application{
 				Key:      "platform",
