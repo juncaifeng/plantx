@@ -126,6 +126,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			"permission:create", "permission:list", "permission:delete",
 			"role:create", "role:read", "role:update", "role:delete",
 			"route:read", "route:update", "route:sync",
+			"registry:read",
 		}
 	default:
 		tenantID = "t_001"

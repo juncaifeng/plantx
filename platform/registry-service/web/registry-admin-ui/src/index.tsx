@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ConfigProvider, Layout as AntLayout, Typography } from 'antd';
 import { KitProvider, type KitContextValue } from '@plantx/kit-sdk-kit';
 import type { KitApiClient } from '@plantx/kit-sdk-api';
+import { MemoryRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RegistryAdminPage } from './RegistryAdminPage';
 
 interface QiankunProps {
@@ -14,7 +15,7 @@ interface QiankunProps {
   apiClient?: KitApiClient;
 }
 
-const { Header, Content } = AntLayout;
+const { Header } = AntLayout;
 
 function render(props: QiankunProps) {
   const container = props.container ?? document.getElementById('root') ?? document.body;
@@ -28,16 +29,19 @@ function render(props: QiankunProps) {
   root.render(
     <ConfigProvider>
       <KitProvider value={context}>
-        <AntLayout style={{ minHeight: '100%' }}>
-          <Header style={{ display: 'flex', alignItems: 'center' }}>
-            <Typography.Title level={5} style={{ color: '#fff', margin: 0 }}>
-              Registry Management
-            </Typography.Title>
-          </Header>
-          <Content style={{ padding: 24 }}>
-            <RegistryAdminPage />
-          </Content>
-        </AntLayout>
+        <MemoryRouter initialEntries={['/admin/registry/applications']}>
+          <AntLayout style={{ minHeight: '100%' }}>
+            <Header style={{ display: 'flex', alignItems: 'center' }}>
+              <Typography.Title level={5} style={{ color: '#fff', margin: 0 }}>
+                Registry Management
+              </Typography.Title>
+            </Header>
+            <Routes>
+              <Route path="/admin/registry" element={<Navigate to="/admin/registry/applications" />} />
+              <Route path="/admin/registry/:section" element={<RegistryAdminPage />} />
+            </Routes>
+          </AntLayout>
+        </MemoryRouter>
       </KitProvider>
     </ConfigProvider>
   );

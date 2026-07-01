@@ -5,14 +5,25 @@ import {
   Form,
   Input,
   InputNumber,
+  Layout,
+  Menu,
   Modal,
   Space,
   Table,
-  Tabs,
   Tag,
   Typography,
   message,
 } from 'antd';
+import { Link, useParams } from 'react-router-dom';
+import {
+  AppstoreOutlined,
+  CloudServerOutlined,
+  MenuOutlined,
+  MobileOutlined,
+  SafetyOutlined,
+  TeamOutlined,
+  ToolOutlined,
+} from '@ant-design/icons';
 import { useKitContext } from '@plantx/kit-sdk-kit';
 import {
   RegistryServiceClient,
@@ -26,7 +37,31 @@ import { PermissionsTab } from './PermissionsTab';
 import { RolesTab } from './RolesTab';
 import { RoutePoliciesTab } from './RoutePoliciesTab';
 
+const { Sider, Content } = Layout;
+
+type Section =
+  | 'applications'
+  | 'services'
+  | 'menus'
+  | 'micro-apps'
+  | 'permissions'
+  | 'roles'
+  | 'route-policies';
+
+const menuItems = [
+  { key: 'applications', label: 'Applications', icon: <AppstoreOutlined />, path: '/admin/registry/applications' },
+  { key: 'services', label: 'Services', icon: <CloudServerOutlined />, path: '/admin/registry/services' },
+  { key: 'menus', label: 'Menus', icon: <MenuOutlined />, path: '/admin/registry/menus' },
+  { key: 'micro-apps', label: 'Micro Apps', icon: <MobileOutlined />, path: '/admin/registry/micro-apps' },
+  { key: 'permissions', label: 'Permissions', icon: <SafetyOutlined />, path: '/admin/registry/permissions' },
+  { key: 'roles', label: 'Roles', icon: <TeamOutlined />, path: '/admin/registry/roles' },
+  { key: 'route-policies', label: 'Route Policies', icon: <ToolOutlined />, path: '/admin/registry/route-policies' },
+];
+
 export function RegistryAdminPage() {
+  const { section } = useParams<{ section: string }>();
+  const activeSection: Section = (section as Section) ?? 'applications';
+
   const { apiClient } = useKitContext();
   const registryClient = useMemo(
     () => (apiClient ? new RegistryServiceClient(apiClient) : null),
@@ -91,7 +126,7 @@ export function RegistryAdminPage() {
     } catch (e) {
       message.error('Failed to load menus');
       // eslint-disable-next-line no-console
-      console.error('failed to list menus', e);
+      console.error('failed to load menus', e);
     } finally {
       setLoadingMenus(false);
     }
@@ -357,16 +392,11 @@ export function RegistryAdminPage() {
     },
   ];
 
-  const servicesTab = (
-    <Table
-      loading={loadingServices}
-      rowKey="id"
-      dataSource={services}
-      columns={serviceColumns}
-    />
+  const servicesContent = (
+    <Table loading={loadingServices} rowKey="id" dataSource={services} columns={serviceColumns} />
   );
 
-  const menusTab = (
+  const menusContent = (
     <Space direction="vertical" style={{ width: '100%' }} size="large">
       <Button type="primary" onClick={openCreateMenu}>
         Create Menu
@@ -375,136 +405,157 @@ export function RegistryAdminPage() {
     </Space>
   );
 
-  const microAppsTab = (
-    <Table
-      loading={loadingMicroApps}
-      rowKey="name"
-      dataSource={microApps}
-      columns={microAppColumns}
-    />
+  const microAppsContent = (
+    <Table loading={loadingMicroApps} rowKey="name" dataSource={microApps} columns={microAppColumns} />
   );
 
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'applications':
+        return <ApplicationsTab />;
+      case 'services':
+        return servicesContent;
+      case 'menus':
+        return menusContent;
+      case 'micro-apps':
+        return microAppsContent;
+      case 'permissions':
+        return <PermissionsTab />;
+      case 'roles':
+        return <RolesTab />;
+      case 'route-policies':
+        return <RoutePoliciesTab />;
+      default:
+        return <ApplicationsTab />;
+    }
+  };
+
+  const activeMenuItem = menuItems.find((item) => item.key === activeSection);
+
   return (
-    <Card title="Registry Management">
-      <Tabs
-        items={[
-          { key: 'applications', label: 'Applications', children: <ApplicationsTab /> },
-          { key: 'services', label: 'Services', children: servicesTab },
-          { key: 'menus', label: 'Menus', children: menusTab },
-          { key: 'micro-apps', label: 'Micro Apps', children: microAppsTab },
-          { key: 'permissions', label: 'Permissions', children: <PermissionsTab /> },
-          { key: 'roles', label: 'Roles', children: <RolesTab /> },
-          { key: 'route-policies', label: 'Route Policies', children: <RoutePoliciesTab /> },
-        ]}
-      />
+    <Layout style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <Sider width={200} style={{ background: '#fff' }}>
+        <Menu
+          mode="inline"
+          selectedKeys={[activeSection]}
+          items={menuItems.map((item) => ({
+            key: item.key,
+            icon: item.icon,
+            label: <Link to={item.path}>{item.label}</Link>,
+          }))}
+        />
+      </Sider>
+      <Content style={{ padding: 24 }}>
+        <Card title={activeMenuItem?.label ?? 'Registry Management'}>{renderContent()}</Card>
 
-      <Modal
-        title={`Routes for ${selectedServiceName}`}
-        open={isRoutesModalOpen}
-        onCancel={() => setIsRoutesModalOpen(false)}
-        footer={null}
-      >
-        {selectedRoutes.map((route, idx) => (
-          <Typography.Paragraph key={idx}>
-            <Typography.Text code>{route.method}</Typography.Text>{' '}
-            <Typography.Text>{route.path}</Typography.Text>
-          </Typography.Paragraph>
-        ))}
-      </Modal>
+        <Modal
+          title={`Routes for ${selectedServiceName}`}
+          open={isRoutesModalOpen}
+          onCancel={() => setIsRoutesModalOpen(false)}
+          footer={null}
+        >
+          {selectedRoutes.map((route, idx) => (
+            <Typography.Paragraph key={idx}>
+              <Typography.Text code>{route.method}</Typography.Text>{' '}
+              <Typography.Text>{route.path}</Typography.Text>
+            </Typography.Paragraph>
+          ))}
+        </Modal>
 
-      <Modal
-        title={editingMenu ? 'Edit Menu' : 'Create Menu'}
-        open={isMenuModalOpen}
-        onCancel={() => setIsMenuModalOpen(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Form form={menuForm} layout="vertical" onFinish={saveMenu}>
-          <Form.Item
-            label="Label Key"
-            name="labelKey"
-            rules={[{ required: true, message: 'Please enter label key' }]}
-          >
-            <Input placeholder="nav.orders" />
-          </Form.Item>
-          <Form.Item label="Route" name="route">
-            <Input placeholder="/order" />
-          </Form.Item>
-          <Form.Item label="Icon" name="icon">
-            <Input placeholder="AppstoreOutlined" />
-          </Form.Item>
-          <Form.Item label="Parent ID" name="parentId">
-            <Input placeholder="parent-menu-id" />
-          </Form.Item>
-          <Form.Item label="Sort Order" name="sortOrder">
-            <InputNumber style={{ width: '100%' }} placeholder="1" />
-          </Form.Item>
-          <Form.Item label="Micro App Name" name="microAppName">
-            <Input placeholder="order-ui" />
-          </Form.Item>
-          <Form.Item label="Required Permission" name="requirePermission">
-            <Input placeholder="order:read" />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={saving}>
-                Save
-              </Button>
-              <Button onClick={() => setIsMenuModalOpen(false)}>Cancel</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <Modal
+          title={editingMenu ? 'Edit Menu' : 'Create Menu'}
+          open={isMenuModalOpen}
+          onCancel={() => setIsMenuModalOpen(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form form={menuForm} layout="vertical" onFinish={saveMenu}>
+            <Form.Item
+              label="Label Key"
+              name="labelKey"
+              rules={[{ required: true, message: 'Please enter label key' }]}
+            >
+              <Input placeholder="nav.orders" />
+            </Form.Item>
+            <Form.Item label="Route" name="route">
+              <Input placeholder="/order" />
+            </Form.Item>
+            <Form.Item label="Icon" name="icon">
+              <Input placeholder="AppstoreOutlined" />
+            </Form.Item>
+            <Form.Item label="Parent ID" name="parentId">
+              <Input placeholder="parent-menu-id" />
+            </Form.Item>
+            <Form.Item label="Sort Order" name="sortOrder">
+              <InputNumber style={{ width: '100%' }} placeholder="1" />
+            </Form.Item>
+            <Form.Item label="Micro App Name" name="microAppName">
+              <Input placeholder="order-ui" />
+            </Form.Item>
+            <Form.Item label="Required Permission" name="requirePermission">
+              <Input placeholder="order:read" />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  Save
+                </Button>
+                <Button onClick={() => setIsMenuModalOpen(false)}>Cancel</Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
 
-      <Modal
-        title="Edit Micro App"
-        open={isMicroAppModalOpen}
-        onCancel={() => setIsMicroAppModalOpen(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Form form={microAppForm} layout="vertical" onFinish={saveMicroApp}>
-          <Form.Item label="Name" name="name">
-            <Input disabled />
-          </Form.Item>
-          <Form.Item
-            label="Route"
-            name="route"
-            rules={[{ required: true, message: 'Please enter route' }]}
-          >
-            <Input placeholder="/admin/registry" />
-          </Form.Item>
-          <Form.Item
-            label="Bundle URL"
-            name="bundleUrl"
-            rules={[{ required: true, message: 'Please enter bundle URL' }]}
-          >
-            <Input placeholder="/apps/registry-admin-ui/registry-admin-ui.js" />
-          </Form.Item>
-          <Form.Item
-            label="Menu Label Key"
-            name="menuLabelKey"
-            rules={[{ required: true, message: 'Please enter menu label key' }]}
-          >
-            <Input placeholder="nav.registry" />
-          </Form.Item>
-          <Form.Item
-            label="Required Permission"
-            name="requirePermission"
-            rules={[{ required: true, message: 'Please enter required permission' }]}
-          >
-            <Input placeholder="registry:read" />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={saving}>
-                Save
-              </Button>
-              <Button onClick={() => setIsMicroAppModalOpen(false)}>Cancel</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Card>
+        <Modal
+          title="Edit Micro App"
+          open={isMicroAppModalOpen}
+          onCancel={() => setIsMicroAppModalOpen(false)}
+          footer={null}
+          destroyOnClose
+        >
+          <Form form={microAppForm} layout="vertical" onFinish={saveMicroApp}>
+            <Form.Item label="Name" name="name">
+              <Input disabled />
+            </Form.Item>
+            <Form.Item
+              label="Route"
+              name="route"
+              rules={[{ required: true, message: 'Please enter route' }]}
+            >
+              <Input placeholder="/admin/registry" />
+            </Form.Item>
+            <Form.Item
+              label="Bundle URL"
+              name="bundleUrl"
+              rules={[{ required: true, message: 'Please enter bundle URL' }]}
+            >
+              <Input placeholder="/apps/registry-admin-ui/registry-admin-ui.js" />
+            </Form.Item>
+            <Form.Item
+              label="Menu Label Key"
+              name="menuLabelKey"
+              rules={[{ required: true, message: 'Please enter menu label key' }]}
+            >
+              <Input placeholder="nav.registry" />
+            </Form.Item>
+            <Form.Item
+              label="Required Permission"
+              name="requirePermission"
+              rules={[{ required: true, message: 'Please enter required permission' }]}
+            >
+              <Input placeholder="registry:read" />
+            </Form.Item>
+            <Form.Item>
+              <Space>
+                <Button type="primary" htmlType="submit" loading={saving}>
+                  Save
+                </Button>
+                <Button onClick={() => setIsMicroAppModalOpen(false)}>Cancel</Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Content>
+    </Layout>
   );
 }
