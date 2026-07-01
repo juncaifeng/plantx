@@ -91,25 +91,25 @@ render_conf() {
   cat > /etc/nginx/conf.d/static-locations.conf <<'EOF'
     location /auth/ {
         set $target mock-auth:8080;
-        proxy_pass http://$target/;
+        proxy_pass http://$target$request_uri;
         proxy_set_header Host $host;
     }
 
     location /oauth/token {
         set $target mock-auth:8080;
-        proxy_pass http://$target/oauth/token;
+        proxy_pass http://$target$request_uri;
         proxy_set_header Host $host;
     }
 
     location /openapi/ {
         set $target portal:80;
-        proxy_pass http://$target/openapi/;
+        proxy_pass http://$target$request_uri;
         proxy_set_header Host $host;
     }
 
     location / {
         set $target portal:80;
-        proxy_pass http://$target/;
+        proxy_pass http://$target$request_uri;
         proxy_set_header Host $host;
     }
 EOF
