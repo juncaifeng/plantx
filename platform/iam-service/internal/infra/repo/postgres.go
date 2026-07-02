@@ -297,9 +297,7 @@ func (r *PostgresRepo) ListPolicies(ctx context.Context) ([]*domain.Policy, erro
 		if err != nil {
 			return nil, fmt.Errorf("list policy permissions: %w", err)
 		}
-		for _, perm := range perms {
-			p.Permissions = append(p.Permissions, perm)
-		}
+		p.Permissions = append(p.Permissions, perms...)
 		conds, err := r.queries.ListPolicyConditions(ctx, row.ID)
 		if err != nil {
 			return nil, fmt.Errorf("list policy conditions: %w", err)
@@ -408,9 +406,7 @@ func (r *PostgresRepo) policyWithRelations(ctx context.Context, policyID uuid.UU
 			if err != nil {
 				return nil, fmt.Errorf("list policy permissions: %w", err)
 			}
-			for _, perm := range perms {
-				policy.Permissions = append(policy.Permissions, perm)
-			}
+			policy.Permissions = append(policy.Permissions, perms...)
 			conds, err := r.queries.ListPolicyConditions(ctx, policyID)
 			if err != nil {
 				return nil, fmt.Errorf("list policy conditions: %w", err)
