@@ -42,6 +42,7 @@ function render(props: QiankunProps) {
             <Routes>
               <Route path="/admin/registry" element={<Navigate to="/admin/registry/applications" />} />
               <Route path="/admin/registry/:section" element={<RegistryAdminPage />} />
+              <Route path="*" element={<Navigate to="/admin/registry/applications" />} />
             </Routes>
           </AntLayout>
         </MemoryRouter>
