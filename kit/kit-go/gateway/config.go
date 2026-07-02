@@ -203,27 +203,11 @@ func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 	}
 
 	for _, m := range cfg.MicroApps {
-		opts = append(opts, WithMicroApp(MicroApp{
-			Name:              m.Name,
-			Route:             m.Route,
-			BundleURL:         m.BundleURL,
-			MenuLabelKey:      m.MenuLabelKey,
-			RequirePermission: m.RequirePermission,
-			Upstream:          m.Upstream,
-		}))
+		opts = append(opts, WithMicroApp(MicroApp(m)))
 	}
 
 	for _, m := range cfg.Menus {
-		opts = append(opts, WithMenu(Menu{
-			LabelKey:          m.LabelKey,
-			Route:             m.Route,
-			Icon:              m.Icon,
-			ParentID:          m.ParentID,
-			ParentLabelKey:    m.ParentLabelKey,
-			SortOrder:         m.SortOrder,
-			MicroAppName:      m.MicroAppName,
-			RequirePermission: m.RequirePermission,
-		}))
+		opts = append(opts, WithMenu(Menu(m)))
 	}
 
 	registrar := AutoRegister(cfg.Service.Name, opts...)
@@ -238,12 +222,7 @@ func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 			client := NewIAMClient(iamAddr)
 			permissions := make([]Permission, len(cfg.Permissions))
 			for i, p := range cfg.Permissions {
-				permissions[i] = Permission{
-					Name:        p.Name,
-					Resource:    p.Resource,
-					Operation:   p.Operation,
-					Description: p.Description,
-				}
+				permissions[i] = Permission(p)
 			}
 			required := collectRequiredPermissions(cfg)
 			if err := syncAndValidatePermissions(client, permissions, required); err != nil {

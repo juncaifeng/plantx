@@ -90,12 +90,7 @@ func (c *IAMClient) ListPermissions(ctx context.Context) (map[string]iamPermissi
 
 // CreatePermission registers a permission in the catalog.
 func (c *IAMClient) CreatePermission(ctx context.Context, p Permission) error {
-	body, err := json.Marshal(iamCreatePermissionRequest{
-		Name:        p.Name,
-		Resource:    p.Resource,
-		Operation:   p.Operation,
-		Description: p.Description,
-	})
+	body, err := json.Marshal(iamCreatePermissionRequest(p))
 	if err != nil {
 		return err
 	}
