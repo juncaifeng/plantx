@@ -53,6 +53,7 @@ fi
 echo "==> Generating demo app proto code"
 protoc \
   --proto_path=proto \
+  --proto_path=demo_app/backend/api \
   --go_out=. \
   --go_opt=paths=source_relative \
   --go-grpc_out=. \
