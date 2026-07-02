@@ -48,6 +48,7 @@ type MenuConfig struct {
 	Route             string `yaml:"route"`
 	Icon              string `yaml:"icon"`
 	ParentID          string `yaml:"parent_id"`
+	ParentLabelKey    string `yaml:"parent_label_key"`
 	SortOrder         int32  `yaml:"sort_order"`
 	MicroAppName      string `yaml:"micro_app_name"`
 	RequirePermission string `yaml:"require_permission"`
@@ -63,11 +64,11 @@ type PermissionConfig struct {
 
 // Config is the top-level YAML configuration for gateway registration.
 type Config struct {
-	Service      ServiceConfig       `yaml:"service"`
-	Application  ApplicationConfig   `yaml:"application"`
-	MicroApps    []MicroAppConfig    `yaml:"micro_apps"`
-	Menus        []MenuConfig        `yaml:"menus"`
-	Permissions  []PermissionConfig  `yaml:"permissions"`
+	Service     ServiceConfig      `yaml:"service"`
+	Application ApplicationConfig  `yaml:"application"`
+	MicroApps   []MicroAppConfig   `yaml:"micro_apps"`
+	Menus       []MenuConfig       `yaml:"menus"`
+	Permissions []PermissionConfig `yaml:"permissions"`
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}:]+)(?::-([^}]*))?\}|\$([A-Za-z_][A-Za-z0-9_]*)`)
@@ -123,6 +124,7 @@ func expandConfig(cfg *Config) {
 		cfg.Menus[i].Route = expandEnv(cfg.Menus[i].Route)
 		cfg.Menus[i].Icon = expandEnv(cfg.Menus[i].Icon)
 		cfg.Menus[i].ParentID = expandEnv(cfg.Menus[i].ParentID)
+		cfg.Menus[i].ParentLabelKey = expandEnv(cfg.Menus[i].ParentLabelKey)
 		cfg.Menus[i].MicroAppName = expandEnv(cfg.Menus[i].MicroAppName)
 		cfg.Menus[i].RequirePermission = expandEnv(cfg.Menus[i].RequirePermission)
 	}
@@ -201,26 +203,11 @@ func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 	}
 
 	for _, m := range cfg.MicroApps {
-		opts = append(opts, WithMicroApp(MicroApp{
-			Name:              m.Name,
-			Route:             m.Route,
-			BundleURL:         m.BundleURL,
-			MenuLabelKey:      m.MenuLabelKey,
-			RequirePermission: m.RequirePermission,
-			Upstream:          m.Upstream,
-		}))
+		opts = append(opts, WithMicroApp(MicroApp(m)))
 	}
 
 	for _, m := range cfg.Menus {
-		opts = append(opts, WithMenu(Menu{
-			LabelKey:          m.LabelKey,
-			Route:             m.Route,
-			Icon:              m.Icon,
-			ParentID:          m.ParentID,
-			SortOrder:         m.SortOrder,
-			MicroAppName:      m.MicroAppName,
-			RequirePermission: m.RequirePermission,
-		}))
+		opts = append(opts, WithMenu(Menu(m)))
 	}
 
 	registrar := AutoRegister(cfg.Service.Name, opts...)
@@ -235,12 +222,7 @@ func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 			client := NewIAMClient(iamAddr)
 			permissions := make([]Permission, len(cfg.Permissions))
 			for i, p := range cfg.Permissions {
-				permissions[i] = Permission{
-					Name:        p.Name,
-					Resource:    p.Resource,
-					Operation:   p.Operation,
-					Description: p.Description,
-				}
+				permissions[i] = Permission(p)
 			}
 			required := collectRequiredPermissions(cfg)
 			if err := syncAndValidatePermissions(client, permissions, required); err != nil {

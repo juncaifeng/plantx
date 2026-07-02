@@ -59,6 +59,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       TEMPORAL_HOST: temporal-server:7233
     depends_on:
       postgres:
@@ -131,6 +132,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       OTEL_EXPORTER_OTLP_ENDPOINT: ''
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
@@ -157,6 +159,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
@@ -182,6 +185,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
@@ -200,9 +204,11 @@ services:
     environment:
       GRPC_PORT: '8080'
       HTTP_PORT: '8081'
+      IAM_DATABASE_DSN: postgres://plantx:plantx@postgres:5432/plantx?sslmode=disable
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
@@ -224,6 +230,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
@@ -245,6 +252,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:
@@ -266,6 +274,7 @@ services:
       MAXKEY_ISSUER: http://mock-auth:8080
       MAXKEY_JWKS_URL: http://mock-auth:8080/.well-known/jwks.json
       OPA_URL: http://opa:8181
+      IAM_URL: http://iam-service:8081
       GATEWAY_SERVICE_GRPC_ADDR: gateway-service:8080
       REGISTRY_SERVICE_GRPC_ADDR: registry-service:8080
     depends_on:

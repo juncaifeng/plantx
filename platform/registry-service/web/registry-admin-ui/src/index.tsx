@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ConfigProvider, Layout as AntLayout, Typography } from 'antd';
 import { KitProvider, type KitContextValue } from '@plantx/kit-sdk-kit';
 import type { KitApiClient } from '@plantx/kit-sdk-api';
+import { MemoryRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RegistryAdminPage } from './RegistryAdminPage';
 
 interface QiankunProps {
@@ -14,7 +15,7 @@ interface QiankunProps {
   apiClient?: KitApiClient;
 }
 
-const { Header, Content } = AntLayout;
+const { Header } = AntLayout;
 
 function render(props: QiankunProps) {
   const container = props.container ?? document.getElementById('root') ?? document.body;
@@ -24,20 +25,27 @@ function render(props: QiankunProps) {
     permissions: props.permissions,
     apiClient: props.apiClient,
   };
+  const initialPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin/registry')
+    ? window.location.pathname
+    : '/admin/registry/applications';
   const root = ReactDOM.createRoot(container);
   root.render(
     <ConfigProvider>
       <KitProvider value={context}>
-        <AntLayout style={{ minHeight: '100%' }}>
-          <Header style={{ display: 'flex', alignItems: 'center' }}>
-            <Typography.Title level={5} style={{ color: '#fff', margin: 0 }}>
-              Registry Management
-            </Typography.Title>
-          </Header>
-          <Content style={{ padding: 24 }}>
-            <RegistryAdminPage />
-          </Content>
-        </AntLayout>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <AntLayout style={{ minHeight: '100%' }}>
+            <Header style={{ display: 'flex', alignItems: 'center' }}>
+              <Typography.Title level={5} style={{ color: '#fff', margin: 0 }}>
+                Registry Management
+              </Typography.Title>
+            </Header>
+            <Routes>
+              <Route path="/admin/registry" element={<Navigate to="/admin/registry/applications" />} />
+              <Route path="/admin/registry/:section" element={<RegistryAdminPage />} />
+              <Route path="*" element={<Navigate to="/admin/registry/applications" />} />
+            </Routes>
+          </AntLayout>
+        </MemoryRouter>
       </KitProvider>
     </ConfigProvider>
   );

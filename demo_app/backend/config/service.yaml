@@ -37,12 +37,18 @@ micro_apps:
     upstream: ${DEMO_UI_UPSTREAM:-demo-ui:80}
 
 menus:
+  - label_key: nav.demo
+    icon: AppstoreOutlined
+    sort_order: 0
+    require_permission: item:list
+
   - label_key: nav.demo.home
     route: /demo
     icon: HomeOutlined
     sort_order: 10
     micro_app_name: demo-ui
     require_permission: item:list
+    parent_label_key: nav.demo
 
   - label_key: nav.demo.config
     route: /demo/config
@@ -50,6 +56,7 @@ menus:
     sort_order: 20
     micro_app_name: demo-ui
     require_permission: setting:list
+    parent_label_key: nav.demo
 
   - label_key: nav.demo.system
     route: /demo/system
@@ -57,3 +64,4 @@ menus:
     sort_order: 30
     micro_app_name: demo-ui
     require_permission: setting:admin
+    parent_label_key: nav.demo

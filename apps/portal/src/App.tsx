@@ -52,7 +52,7 @@ interface AppRoutesProps {
 }
 
 function AppRoutes({ context, onLogin, onLogout }: AppRoutesProps) {
-  const { microApps } = useMicroApps();
+  const { microApps, loading: microAppsLoading } = useMicroApps();
 
   // Sort micro-apps by route depth (descending) so React Router matches more
   // specific routes before wildcard parent routes. For example:
@@ -82,7 +82,7 @@ function AppRoutes({ context, onLogin, onLogout }: AppRoutesProps) {
                 element={<MicroAppPage manifest={app} />}
               />
             ))}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={microAppsLoading ? null : <Navigate to="/" replace />} />
           </Route>
         )}
       </Routes>

@@ -8,8 +8,8 @@ description: >
   business services or micro-frontends on PlantX.
 metadata:
   author: PlantX Platform Team
-  version: "1.4"
-  updated: "2026-07-01"
+  version: "1.5"
+  updated: "2026-07-02"
 ---
 
 # PlantX SDK Usage Guide
@@ -21,7 +21,7 @@ This skill guides business developers through building on the PlantX platform.
 PlantX is a multi-tenant micro-frontend + microservices platform:
 
 - **Platform services**
-  - `iam-service`: users, roles, permissions
+  - `iam-service`: users, roles, permissions, and ABAC (attributes, conditions, policies)
   - `tenant-service`: tenant management
   - `registry-service`: service, application, micro-app, and menu registration
   - `gateway-service`: legacy/management registry API (not the request proxy)
@@ -36,7 +36,7 @@ PlantX is a multi-tenant micro-frontend + microservices platform:
 
 | Package | Language/Framework | Purpose |
 |---------|-------------------|---------|
-| `@plantx/kit-sdk-api` | TypeScript | HTTP clients for platform services (registry, iam, tenant, gateway, audit) |
+| `@plantx/kit-sdk-api` | TypeScript | HTTP clients for platform services (registry, iam with ABAC, tenant, gateway, audit) |
 | `@plantx/kit-sdk-kit` | React | React context and hooks built on `kit-sdk-api`, including `useKitUser`, `useKitTenant`, `useKitPermission`, `useApplications`, `useMenus`, `useMicroApps`. `useMenus`/`useMicroApps` filter online resources by default |
 | `@plantx/kit-ui` | React | Minimal placeholder UI components (`KitLayout`, `UserMenu`). Depends on antd but does not yet use antd components internally |
 | `github.com/plantx/kit/kit-go` | Go | Server framework with auth, authz, db, events, and gateway registration. `gateway.AutoRegister` supports `WithApplication`, `WithMicroApp`, and `WithMenu` |
@@ -219,6 +219,58 @@ The frontend only needs to build and deploy static assets to the configured `bun
 const orders = await apiClient.get<{ orders: any[] }>('/api/order/v1/orders');
 ```
 
+### 3.10 ABAC (Attribute-Based Access Control)
+
+`iam-service` now supports ABAC policies in addition to RBAC. An ABAC policy contains:
+
+- **Attribute**: a named attribute such as `department` with a value type (e.g. `string`).
+- **Condition**: a rule that compares an attribute value against an expected value using operators `eq`, `ne`, `in`, or `not_in`.
+- **Policy**: binds permissions to a set of conditions with an `allow` or `deny` effect and a priority.
+
+Use `IAMServiceClient` to manage them:
+
+```typescript
+import { IAMServiceClient } from '@plantx/kit-sdk-api/iam';
+
+const iam = new IAMServiceClient(apiClient);
+
+// Attributes
+const attr = await iam.createAttribute({
+  key: 'department',
+  valueType: 'string',
+  description: 'User department',
+});
+const { attributes } = await iam.listAttributes();
+
+// Conditions
+const cond = await iam.createCondition({
+  name: 'sales-dept',
+  attributeKey: 'department',
+  operator: 'eq',
+  value: 'sales',
+});
+const { conditions } = await iam.listConditions();
+
+// Policies
+const policy = await iam.createPolicy({
+  name: 'sales-can-list-items',
+  description: 'Allow sales users to list items',
+  effect: 'allow',
+  priority: 10,
+  permissions: ['item:list'],
+  conditionIds: [cond.id],
+});
+const { policies } = await iam.listPolicies();
+
+// Evaluate a policy manually
+const decision = await iam.evaluatePolicy({
+  permission: 'item:list',
+  userAttributes: { department: 'sales' },
+});
+```
+
+The `kit-go` authz interceptor evaluates ABAC automatically after OPA/RBAC when the backend is configured with `IAM_URL` (see section 4.9).
+
 ## 4. Backend Development
 
 ### 4.1 Service Structure
@@ -324,6 +376,8 @@ gateway.AutoRegister("order-service",
         SortOrder:         20,
         MicroAppName:      "order-ui",
         RequirePermission: "order:admin",
+        // Reference a parent menu registered earlier by its label key
+        ParentLabelKey:    "nav.orders",
     }),
     gateway.WithGRPCHost("order-service:8080"),
     gateway.WithRESTPrefix("/api/order/v1"),
@@ -338,6 +392,8 @@ gateway.AutoRegister("order-service",
 - REST prefix: env `<SERVICE_UPPER>_REST_PREFIX`, default `/api/<base>/v1` (strips `-service`)
 
 For `order-service`, the default REST prefix is `/api/order/v1`.
+
+**Nested menus**: declare a parent menu first, then set `ParentLabelKey` on child menus to the parent's `LabelKey`. `kit-go` resolves the parent's registry ID at registration time and stores it as `parent_id`. You can also pass a raw registry UUID in `ParentID` when you already know it.
 
 **Idempotency**: menu registration is upserted by `(application_id, label_key, route)`. Restarting a service updates existing menus instead of creating duplicates. The service lifecycle state machine sets menus and micro-apps `OFFLINE` when the service stops and back to `ONLINE` when it starts.
 
@@ -382,12 +438,26 @@ permissions:
     description: Administer orders
 
 menus:
+  - label_key: nav.orders
+    icon: ShoppingCartOutlined
+    sort_order: 0
+    require_permission: order:read
+
   - label_key: nav.orders.list
     route: /order
     icon: ShoppingCartOutlined
     sort_order: 10
     micro_app_name: order-ui
     require_permission: order:read
+    parent_label_key: nav.orders
+
+  - label_key: nav.orders.settings
+    route: /order/settings
+    icon: SettingOutlined
+    sort_order: 20
+    micro_app_name: order-ui
+    require_permission: order:admin
+    parent_label_key: nav.orders
 ```
 
 Then load it in `main.go`:
@@ -502,6 +572,20 @@ defer client.Close()
 apps, err := client.ListApplications(context.Background())
 ```
 
+### 4.9 ABAC Authorization
+
+`kit-go` can evaluate ABAC policies hosted in `iam-service` as a fallback when OPA or RBAC denies a request. Enable it by setting the `IAM_URL` environment variable (or passing `IAMURL` to the OPA authorizer):
+
+```go
+authorizer := authzopa.New(authzopa.Options{
+    URL:          os.Getenv("OPA_URL"),
+    DecisionPath: os.Getenv("OPA_DECISION_PATH"),
+    IAMURL:       os.Getenv("IAM_URL"), // e.g. http://iam-service:8081
+})
+```
+
+The authorizer sends the requested permission and JWT claims to `iam-service`'s `EvaluatePolicy` endpoint. If a matching ABAC policy allows the action, the request is permitted. This lets platform admins write fine-grained rules (e.g. "users in the sales department can list items") without redeploying services.
+
 ## 5. Permission Naming
 
 Permissions are managed by `iam-service` in the form `<resource>:<operation>`, e.g.:
@@ -567,6 +651,8 @@ Authentication and authorization are optional at runtime unless the correspondin
 | Duplicate menus after restart | Should not happen with menu upsert; check migration `008_menus_upsert` has been applied |
 | Permission denied | Verify proto authz action and IAM role assignment |
 | Route not proxied | Verify `registry-service` has the service's `rest_prefix` and nginx/apisix has synced routes |
+| Nested menu not shown | Verify the parent menu is declared first, `parent_label_key` matches the parent's `label_key`, and both are in the same application |
+| ABAC policy not enforced | Verify `IAM_URL` is set in the backend, the policy's permission/conditions match, and the user JWT contains the expected attributes |
 
 ## 10. Related Files
 

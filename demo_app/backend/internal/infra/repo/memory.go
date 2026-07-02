@@ -12,10 +12,10 @@ import (
 
 // InMemoryRepo is a simple thread-safe in-memory repository.
 type InMemoryRepo struct {
-	mu        sync.RWMutex
-	items     []*domain.Item
-	settings  []*domain.Setting
-	nextID    int
+	mu       sync.RWMutex
+	items    []*domain.Item
+	settings []*domain.Setting
+	nextID   int
 }
 
 // NewInMemoryRepo creates a new InMemoryRepo.

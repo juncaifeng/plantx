@@ -6,6 +6,188 @@ info:
     title: IAMService API
     version: 0.0.1
 paths:
+    /api/iam/v1/attributes:
+        get:
+            tags:
+                - IAMService
+            operationId: IAMService_ListAttributes
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListAttributesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - IAMService
+            operationId: IAMService_CreateAttribute
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateAttributeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Attribute'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/iam/v1/attributes/{id}:
+        put:
+            tags:
+                - IAMService
+            operationId: IAMService_UpdateAttribute
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateAttributeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Attribute'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - IAMService
+            operationId: IAMService_DeleteAttribute
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/iam/v1/conditions:
+        get:
+            tags:
+                - IAMService
+            operationId: IAMService_ListConditions
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListConditionsResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - IAMService
+            operationId: IAMService_CreateCondition
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateConditionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Condition'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/iam/v1/conditions/{id}:
+        put:
+            tags:
+                - IAMService
+            operationId: IAMService_UpdateCondition
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateConditionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Condition'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - IAMService
+            operationId: IAMService_DeleteCondition
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/iam/v1/permissions:
         get:
             tags:
@@ -52,6 +234,121 @@ paths:
             tags:
                 - IAMService
             operationId: IAMService_DeletePermission
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/iam/v1/policies:
+        get:
+            tags:
+                - IAMService
+            operationId: IAMService_ListPolicies
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListPoliciesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - IAMService
+            operationId: IAMService_CreatePolicy
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreatePolicyRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Policy'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/iam/v1/policies/evaluate:
+        post:
+            tags:
+                - IAMService
+            operationId: IAMService_EvaluatePolicy
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EvaluatePolicyRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/EvaluatePolicyResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/iam/v1/policies/{id}:
+        put:
+            tags:
+                - IAMService
+            operationId: IAMService_UpdatePolicy
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdatePolicyRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Policy'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - IAMService
+            operationId: IAMService_DeletePolicy
             parameters:
                 - name: id
                   in: path
@@ -225,6 +522,54 @@ paths:
                                 $ref: '#/components/schemas/Status'
 components:
     schemas:
+        Attribute:
+            type: object
+            properties:
+                id:
+                    type: string
+                key:
+                    type: string
+                valueType:
+                    type: string
+                description:
+                    type: string
+        Condition:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                attributeKey:
+                    type: string
+                operator:
+                    type: string
+                value:
+                    type: string
+                description:
+                    type: string
+        CreateAttributeRequest:
+            type: object
+            properties:
+                key:
+                    type: string
+                valueType:
+                    type: string
+                description:
+                    type: string
+        CreateConditionRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                attributeKey:
+                    type: string
+                operator:
+                    type: string
+                value:
+                    type: string
+                description:
+                    type: string
         CreatePermissionRequest:
             type: object
             properties:
@@ -236,6 +581,26 @@ components:
                     type: string
                 description:
                     type: string
+        CreatePolicyRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                description:
+                    type: string
+                permissions:
+                    type: array
+                    items:
+                        type: string
+                conditionIds:
+                    type: array
+                    items:
+                        type: string
+                effect:
+                    type: string
+                priority:
+                    type: integer
+                    format: int32
         CreateRoleRequest:
             type: object
             properties:
@@ -258,6 +623,26 @@ components:
                     type: array
                     items:
                         type: string
+        EvaluatePolicyRequest:
+            type: object
+            properties:
+                permission:
+                    type: string
+                userAttributes:
+                    type: object
+                    additionalProperties:
+                        type: string
+                resourceAttributes:
+                    type: object
+                    additionalProperties:
+                        type: string
+        EvaluatePolicyResponse:
+            type: object
+            properties:
+                allowed:
+                    type: boolean
+                reason:
+                    type: string
         GoogleProtobufAny:
             type: object
             properties:
@@ -266,6 +651,20 @@ components:
                     description: The type of the serialized message.
             additionalProperties: true
             description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        ListAttributesResponse:
+            type: object
+            properties:
+                attributes:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Attribute'
+        ListConditionsResponse:
+            type: object
+            properties:
+                conditions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Condition'
         ListPermissionsResponse:
             type: object
             properties:
@@ -273,6 +672,13 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/Permission'
+        ListPoliciesResponse:
+            type: object
+            properties:
+                policies:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Policy'
         ListRolesResponse:
             type: object
             properties:
@@ -300,6 +706,28 @@ components:
                     type: string
                 description:
                     type: string
+        Policy:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                permissions:
+                    type: array
+                    items:
+                        type: string
+                conditionIds:
+                    type: array
+                    items:
+                        type: string
+                effect:
+                    type: string
+                priority:
+                    type: integer
+                    format: int32
         Role:
             type: object
             properties:
@@ -329,6 +757,54 @@ components:
                         $ref: '#/components/schemas/GoogleProtobufAny'
                     description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
             description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
+        UpdateAttributeRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                key:
+                    type: string
+                valueType:
+                    type: string
+                description:
+                    type: string
+        UpdateConditionRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                attributeKey:
+                    type: string
+                operator:
+                    type: string
+                value:
+                    type: string
+                description:
+                    type: string
+        UpdatePolicyRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                permissions:
+                    type: array
+                    items:
+                        type: string
+                conditionIds:
+                    type: array
+                    items:
+                        type: string
+                effect:
+                    type: string
+                priority:
+                    type: integer
+                    format: int32
         UpdateRoleRequest:
             type: object
             properties:

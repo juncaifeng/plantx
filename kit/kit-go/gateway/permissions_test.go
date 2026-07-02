@@ -26,12 +26,7 @@ func TestIAMClientSyncPermissions(t *testing.T) {
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return
 				}
-				created = append(created, Permission{
-					Name:        req.Name,
-					Resource:    req.Resource,
-					Operation:   req.Operation,
-					Description: req.Description,
-				})
+				created = append(created, Permission(req))
 				w.WriteHeader(http.StatusCreated)
 			}
 		default:

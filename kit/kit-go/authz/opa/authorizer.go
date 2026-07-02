@@ -19,6 +19,9 @@ type Options struct {
 	Policy string
 	// DecisionPath is the OPA decision path, e.g. "/v1/data/plantx/authz/allow".
 	DecisionPath string
+	// IAMURL is the base URL of the IAM service HTTP gateway. When OPA is not
+	// configured, the authorizer can evaluate ABAC policies via IAM.
+	IAMURL string
 }
 
 // Authorizer requests policy decisions from OPA.
@@ -33,6 +36,7 @@ func New(opts Options) *Authorizer {
 		opts.DecisionPath = "/v1/data/plantx/authz/allow"
 	}
 	opts.URL = strings.TrimRight(opts.URL, "/")
+	opts.IAMURL = strings.TrimRight(opts.IAMURL, "/")
 	if !strings.HasPrefix(opts.DecisionPath, "/") {
 		opts.DecisionPath = "/" + opts.DecisionPath
 	}
@@ -50,13 +54,49 @@ type decisionResponse struct {
 	Result bool `json:"result"`
 }
 
+type abacEvaluateRequest struct {
+	Permission         string            `json:"permission"`
+	UserAttributes     map[string]string `json:"user_attributes"`
+	ResourceAttributes map[string]string `json:"resource_attributes"`
+}
+
+type abacEvaluateResponse struct {
+	Allowed bool   `json:"allowed"`
+	Reason  string `json:"reason"`
+}
+
 // Authorize asks OPA whether the action is allowed.
 func (a *Authorizer) Authorize(ctx context.Context, req authz.Request) (authz.Decision, error) {
+	var rbacAllowed bool
+	var rbacReason string
 	if a.opts.URL == "" {
-		// Fallback: allow if user has matching permission or role.
-		allowed := hasPermission(req.User.Permissions, req.Action) || hasRole(req.User.Roles, req.Action)
-		return authz.Decision{Allowed: allowed, Reason: "local RBAC fallback"}, nil
+		rbacAllowed = hasPermission(req.User.Permissions, req.Action) || hasRole(req.User.Roles, req.Action)
+		rbacReason = "local RBAC fallback"
+	} else {
+		d, err := a.evaluateOPA(ctx, req)
+		if err != nil {
+			return authz.Decision{}, err
+		}
+		rbacAllowed = d.Allowed
+		rbacReason = d.Reason
 	}
+	if rbacAllowed {
+		return authz.Decision{Allowed: true, Reason: rbacReason}, nil
+	}
+	// RBAC denied; try ABAC via IAM if configured.
+	if a.opts.IAMURL != "" {
+		abacDecision, err := a.evaluateABAC(ctx, req)
+		if err != nil {
+			return authz.Decision{}, err
+		}
+		if abacDecision.Allowed {
+			return abacDecision, nil
+		}
+	}
+	return authz.Decision{Allowed: false, Reason: rbacReason}, nil
+}
+
+func (a *Authorizer) evaluateOPA(ctx context.Context, req authz.Request) (authz.Decision, error) {
 	input := map[string]any{
 		"user": map[string]any{
 			"id":          req.User.ID,
@@ -92,11 +132,49 @@ func (a *Authorizer) Authorize(ctx context.Context, req authz.Request) (authz.De
 	if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
 		return authz.Decision{}, fmt.Errorf("decode opa response: %w", err)
 	}
-	reason := "denied by policy"
+	reason := "denied by OPA policy"
 	if d.Result {
-		reason = "allowed by policy"
+		reason = "allowed by OPA policy"
 	}
 	return authz.Decision{Allowed: d.Result, Reason: reason}, nil
+}
+
+func (a *Authorizer) evaluateABAC(ctx context.Context, req authz.Request) (authz.Decision, error) {
+	permission := fmt.Sprintf("%s:%s", req.Action.Resource, req.Action.Operation)
+	body, err := json.Marshal(abacEvaluateRequest{
+		Permission:         permission,
+		UserAttributes:     req.User.Claims,
+		ResourceAttributes: toStringMap(req.ResourceContext),
+	})
+	if err != nil {
+		return authz.Decision{}, fmt.Errorf("marshal abac request: %w", err)
+	}
+	hreq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.opts.IAMURL+"/api/iam/v1/policies/evaluate", bytes.NewReader(body))
+	if err != nil {
+		return authz.Decision{}, err
+	}
+	hreq.Header.Set("Content-Type", "application/json")
+	resp, err := a.client.Do(hreq)
+	if err != nil {
+		return authz.Decision{}, fmt.Errorf("abac request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return authz.Decision{}, fmt.Errorf("abac evaluate returned %d", resp.StatusCode)
+	}
+	var d abacEvaluateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
+		return authz.Decision{}, fmt.Errorf("decode abac response: %w", err)
+	}
+	return authz.Decision{Allowed: d.Allowed, Reason: d.Reason}, nil
+}
+
+func toStringMap(m map[string]any) map[string]string {
+	out := make(map[string]string, len(m))
+	for k, v := range m {
+		out[k] = fmt.Sprintf("%v", v)
+	}
+	return out
 }
 
 func hasPermission(perms []string, action authz.Action) bool {

@@ -109,6 +109,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 	var tenantID string
 	var roles []string
 	var permissions []string
+	var attributes map[string]string
 
 	switch username {
 	case "admin":
@@ -126,7 +127,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 			"permission:create", "permission:list", "permission:delete",
 			"role:create", "role:read", "role:update", "role:delete",
 			"route:read", "route:update", "route:sync",
+			"registry:read",
 		}
+		attributes = map[string]string{"department": "platform"}
 	default:
 		tenantID = "t_001"
 		if strings.HasSuffix(username, "-b") {
@@ -134,6 +137,7 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		roles = []string{"user"}
 		permissions = []string{"order:create", "order:read", "order:list"}
+		attributes = map[string]string{"department": "sales"}
 	}
 
 	claims := jwt.MapClaims{
@@ -145,6 +149,9 @@ func tokenHandler(w http.ResponseWriter, r *http.Request) {
 		"tenant_id":   tenantID,
 		"roles":       roles,
 		"permissions": permissions,
+	}
+	for k, v := range attributes {
+		claims[k] = v
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header["kid"] = kid

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Spin } from 'antd';
 import { loadMicroApp, type MicroApp } from 'qiankun';
+import { useLocation } from 'react-router-dom';
 import { useKitContext, type MicroAppManifest } from '@plantx/kit-sdk-kit';
 import { useI18n } from './i18n';
 
@@ -22,6 +23,7 @@ export function MicroAppPage(props: MicroAppPageProps) {
   const microAppRef = useRef<MicroApp | null>(null);
   const ctx = useKitContext();
   const { t, locale } = useI18n();
+  const location = useLocation();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -57,7 +59,7 @@ export function MicroAppPage(props: MicroAppPageProps) {
         console.error(`failed to unmount micro-app ${manifest.name}:`, err);
       });
     };
-  }, [manifest.name, manifest.bundleUrl, ctx.user, ctx.tenant, ctx.permissions, ctx.apiClient, locale]);
+  }, [manifest.name, manifest.bundleUrl, ctx.user, ctx.tenant, ctx.permissions, ctx.apiClient, locale, location.pathname]);
 
   return (
     <div ref={containerRef} style={{ minHeight: 400 }}>

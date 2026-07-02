@@ -31,12 +31,7 @@ func TestAutoRegisterFromConfigSyncsPermissions(t *testing.T) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			createdPermissions = append(createdPermissions, Permission{
-				Name:        req.Name,
-				Resource:    req.Resource,
-				Operation:   req.Operation,
-				Description: req.Description,
-			})
+			createdPermissions = append(createdPermissions, Permission(req))
 			w.WriteHeader(http.StatusCreated)
 			return
 		}

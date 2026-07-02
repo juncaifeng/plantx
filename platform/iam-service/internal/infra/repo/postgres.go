@@ -162,6 +162,264 @@ func (r *PostgresRepo) DeleteRole(ctx context.Context, id string) error {
 	return nil
 }
 
+// ListAttributes returns all ABAC attributes.
+func (r *PostgresRepo) ListAttributes(ctx context.Context) ([]*domain.Attribute, error) {
+	rows, err := r.queries.ListAttributes(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list attributes: %w", err)
+	}
+	out := make([]*domain.Attribute, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, toDomainAttribute(row))
+	}
+	return out, nil
+}
+
+// CreateAttribute persists a new ABAC attribute.
+func (r *PostgresRepo) CreateAttribute(ctx context.Context, key, valueType, description string) (*domain.Attribute, error) {
+	row, err := r.queries.CreateAttribute(ctx, sqlc.CreateAttributeParams{
+		Key:         key,
+		ValueType:   valueType,
+		Description: description,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create attribute: %w", err)
+	}
+	return toDomainAttribute(row), nil
+}
+
+// UpdateAttribute updates an existing ABAC attribute.
+func (r *PostgresRepo) UpdateAttribute(ctx context.Context, id, key, valueType, description string) (*domain.Attribute, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid attribute id: %w", err)
+	}
+	row, err := r.queries.UpdateAttribute(ctx, sqlc.UpdateAttributeParams{
+		ID:          uid,
+		Key:         key,
+		ValueType:   valueType,
+		Description: description,
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("attribute %q not found", id)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update attribute: %w", err)
+	}
+	return toDomainAttribute(row), nil
+}
+
+// DeleteAttribute removes an ABAC attribute by ID.
+func (r *PostgresRepo) DeleteAttribute(ctx context.Context, id string) error {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return fmt.Errorf("invalid attribute id: %w", err)
+	}
+	if err := r.queries.DeleteAttribute(ctx, uid); err != nil {
+		return fmt.Errorf("delete attribute: %w", err)
+	}
+	return nil
+}
+
+// ListConditions returns all ABAC conditions.
+func (r *PostgresRepo) ListConditions(ctx context.Context) ([]*domain.Condition, error) {
+	rows, err := r.queries.ListConditions(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list conditions: %w", err)
+	}
+	out := make([]*domain.Condition, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, toDomainCondition(row))
+	}
+	return out, nil
+}
+
+// CreateCondition persists a new ABAC condition.
+func (r *PostgresRepo) CreateCondition(ctx context.Context, name, attributeKey, operator, value, description string) (*domain.Condition, error) {
+	row, err := r.queries.CreateCondition(ctx, sqlc.CreateConditionParams{
+		Name:         name,
+		AttributeKey: attributeKey,
+		Operator:     operator,
+		Value:        value,
+		Description:  description,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create condition: %w", err)
+	}
+	return toDomainCondition(row), nil
+}
+
+// UpdateCondition updates an existing ABAC condition.
+func (r *PostgresRepo) UpdateCondition(ctx context.Context, id, name, attributeKey, operator, value, description string) (*domain.Condition, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid condition id: %w", err)
+	}
+	row, err := r.queries.UpdateCondition(ctx, sqlc.UpdateConditionParams{
+		ID:           uid,
+		Name:         name,
+		AttributeKey: attributeKey,
+		Operator:     operator,
+		Value:        value,
+		Description:  description,
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("condition %q not found", id)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update condition: %w", err)
+	}
+	return toDomainCondition(row), nil
+}
+
+// DeleteCondition removes an ABAC condition by ID.
+func (r *PostgresRepo) DeleteCondition(ctx context.Context, id string) error {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return fmt.Errorf("invalid condition id: %w", err)
+	}
+	if err := r.queries.DeleteCondition(ctx, uid); err != nil {
+		return fmt.Errorf("delete condition: %w", err)
+	}
+	return nil
+}
+
+// ListPolicies returns all ABAC policies with their permissions and condition IDs.
+func (r *PostgresRepo) ListPolicies(ctx context.Context) ([]*domain.Policy, error) {
+	rows, err := r.queries.ListPolicies(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list policies: %w", err)
+	}
+	out := make([]*domain.Policy, 0, len(rows))
+	for _, row := range rows {
+		p := toDomainPolicy(row)
+		perms, err := r.queries.ListPolicyPermissions(ctx, row.ID)
+		if err != nil {
+			return nil, fmt.Errorf("list policy permissions: %w", err)
+		}
+		p.Permissions = append(p.Permissions, perms...)
+		conds, err := r.queries.ListPolicyConditions(ctx, row.ID)
+		if err != nil {
+			return nil, fmt.Errorf("list policy conditions: %w", err)
+		}
+		for _, cond := range conds {
+			p.ConditionIDs = append(p.ConditionIDs, cond.String())
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
+// CreatePolicy persists a new ABAC policy.
+func (r *PostgresRepo) CreatePolicy(ctx context.Context, name, description, effect string, priority int32, permissions, conditionIDs []string) (*domain.Policy, error) {
+	row, err := r.queries.CreatePolicy(ctx, sqlc.CreatePolicyParams{
+		Name:        name,
+		Description: description,
+		Effect:      effect,
+		Priority:    priority,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create policy: %w", err)
+	}
+	if err := r.setPolicyRelations(ctx, row.ID, permissions, conditionIDs); err != nil {
+		return nil, err
+	}
+	return r.policyWithRelations(ctx, row.ID)
+}
+
+// UpdatePolicy updates an existing ABAC policy.
+func (r *PostgresRepo) UpdatePolicy(ctx context.Context, id, name, description, effect string, priority int32, permissions, conditionIDs []string) (*domain.Policy, error) {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid policy id: %w", err)
+	}
+	row, err := r.queries.UpdatePolicy(ctx, sqlc.UpdatePolicyParams{
+		ID:          uid,
+		Name:        name,
+		Description: description,
+		Effect:      effect,
+		Priority:    priority,
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("policy %q not found", id)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update policy: %w", err)
+	}
+	if err := r.queries.RemovePolicyPermissions(ctx, row.ID); err != nil {
+		return nil, fmt.Errorf("remove policy permissions: %w", err)
+	}
+	if err := r.queries.RemovePolicyConditions(ctx, row.ID); err != nil {
+		return nil, fmt.Errorf("remove policy conditions: %w", err)
+	}
+	if err := r.setPolicyRelations(ctx, row.ID, permissions, conditionIDs); err != nil {
+		return nil, err
+	}
+	return r.policyWithRelations(ctx, row.ID)
+}
+
+// DeletePolicy removes an ABAC policy by ID.
+func (r *PostgresRepo) DeletePolicy(ctx context.Context, id string) error {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return fmt.Errorf("invalid policy id: %w", err)
+	}
+	if err := r.queries.DeletePolicy(ctx, uid); err != nil {
+		return fmt.Errorf("delete policy: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresRepo) setPolicyRelations(ctx context.Context, policyID uuid.UUID, permissions, conditionIDs []string) error {
+	for _, perm := range permissions {
+		if err := r.queries.AddPolicyPermission(ctx, sqlc.AddPolicyPermissionParams{
+			PolicyID:   policyID,
+			Permission: perm,
+		}); err != nil {
+			return fmt.Errorf("add policy permission: %w", err)
+		}
+	}
+	for _, condID := range conditionIDs {
+		cuid, err := uuid.Parse(condID)
+		if err != nil {
+			return fmt.Errorf("invalid condition id %q: %w", condID, err)
+		}
+		if err := r.queries.AddPolicyCondition(ctx, sqlc.AddPolicyConditionParams{
+			PolicyID:    policyID,
+			ConditionID: cuid,
+		}); err != nil {
+			return fmt.Errorf("add policy condition: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *PostgresRepo) policyWithRelations(ctx context.Context, policyID uuid.UUID) (*domain.Policy, error) {
+	row, err := r.queries.ListPolicies(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list policies: %w", err)
+	}
+	for _, p := range row {
+		if p.ID == policyID {
+			policy := toDomainPolicy(p)
+			perms, err := r.queries.ListPolicyPermissions(ctx, policyID)
+			if err != nil {
+				return nil, fmt.Errorf("list policy permissions: %w", err)
+			}
+			policy.Permissions = append(policy.Permissions, perms...)
+			conds, err := r.queries.ListPolicyConditions(ctx, policyID)
+			if err != nil {
+				return nil, fmt.Errorf("list policy conditions: %w", err)
+			}
+			for _, cond := range conds {
+				policy.ConditionIDs = append(policy.ConditionIDs, cond.String())
+			}
+			return policy, nil
+		}
+	}
+	return nil, fmt.Errorf("policy %q not found", policyID)
+}
+
 func toDomainUser(row sqlc.User) *domain.User {
 	return &domain.User{
 		ID:       row.ID.String(),
@@ -187,5 +445,35 @@ func toDomainRole(row sqlc.Role) *domain.Role {
 		Name:        row.Name,
 		Description: row.Description,
 		Permissions: row.Permissions,
+	}
+}
+
+func toDomainAttribute(row sqlc.Attribute) *domain.Attribute {
+	return &domain.Attribute{
+		ID:          row.ID.String(),
+		Key:         row.Key,
+		ValueType:   row.ValueType,
+		Description: row.Description,
+	}
+}
+
+func toDomainCondition(row sqlc.Condition) *domain.Condition {
+	return &domain.Condition{
+		ID:           row.ID.String(),
+		Name:         row.Name,
+		AttributeKey: row.AttributeKey,
+		Operator:     row.Operator,
+		Value:        row.Value,
+		Description:  row.Description,
+	}
+}
+
+func toDomainPolicy(row sqlc.Policy) *domain.Policy {
+	return &domain.Policy{
+		ID:          row.ID.String(),
+		Name:        row.Name,
+		Description: row.Description,
+		Effect:      row.Effect,
+		Priority:    row.Priority,
 	}
 }

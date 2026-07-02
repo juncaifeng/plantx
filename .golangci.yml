@@ -24,5 +24,8 @@ issues:
   exclude-dirs:
     - gen
     - vendor
-    - api
-    - sqlc
+  exclude-files:
+    - '.*\.pb\.go$'
+    - '.*\.pb\.gw\.go$'
+    - '.*\.grpc\.pb\.go$'
+    - '.*\.sql\.go$'

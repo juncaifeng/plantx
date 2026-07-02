@@ -5,14 +5,13 @@ import {
   Form,
   Input,
   InputNumber,
-  Modal,
   Space,
   Table,
-  Tabs,
-  Tag,
+  Modal,
   Typography,
   message,
 } from 'antd';
+import { useParams } from 'react-router-dom';
 import { useKitContext } from '@plantx/kit-sdk-kit';
 import {
   RegistryServiceClient,
@@ -22,11 +21,36 @@ import {
   type Route,
 } from '@plantx/kit-sdk-api/registry';
 import { ApplicationsTab } from './ApplicationsTab';
+import { AttributesTab } from './AttributesTab';
+import { ConditionsTab } from './ConditionsTab';
 import { PermissionsTab } from './PermissionsTab';
+import { PoliciesTab } from './PoliciesTab';
 import { RolesTab } from './RolesTab';
 import { RoutePoliciesTab } from './RoutePoliciesTab';
 
+type Section =
+  | 'applications'
+  | 'menus'
+  | 'routes'
+  | 'permissions'
+  | 'attributes'
+  | 'conditions'
+  | 'policies';
+
+const sectionTitles: Record<Section, string> = {
+  applications: 'Applications',
+  menus: 'Menus & Micro Apps',
+  routes: 'Routes',
+  permissions: 'Permissions & Roles',
+  attributes: 'Attributes',
+  conditions: 'Conditions',
+  policies: 'Policies',
+};
+
 export function RegistryAdminPage() {
+  const { section } = useParams<{ section: string }>();
+  const activeSection: Section = (section as Section) ?? 'applications';
+
   const { apiClient } = useKitContext();
   const registryClient = useMemo(
     () => (apiClient ? new RegistryServiceClient(apiClient) : null),
@@ -91,7 +115,7 @@ export function RegistryAdminPage() {
     } catch (e) {
       message.error('Failed to load menus');
       // eslint-disable-next-line no-console
-      console.error('failed to list menus', e);
+      console.error('failed to load menus', e);
     } finally {
       setLoadingMenus(false);
     }
@@ -357,16 +381,11 @@ export function RegistryAdminPage() {
     },
   ];
 
-  const servicesTab = (
-    <Table
-      loading={loadingServices}
-      rowKey="id"
-      dataSource={services}
-      columns={serviceColumns}
-    />
+  const servicesContent = (
+    <Table loading={loadingServices} rowKey="id" dataSource={services} columns={serviceColumns} />
   );
 
-  const menusTab = (
+  const menusContent = (
     <Space direction="vertical" style={{ width: '100%' }} size="large">
       <Button type="primary" onClick={openCreateMenu}>
         Create Menu
@@ -375,28 +394,49 @@ export function RegistryAdminPage() {
     </Space>
   );
 
-  const microAppsTab = (
-    <Table
-      loading={loadingMicroApps}
-      rowKey="name"
-      dataSource={microApps}
-      columns={microAppColumns}
-    />
+  const microAppsContent = (
+    <Table loading={loadingMicroApps} rowKey="name" dataSource={microApps} columns={microAppColumns} />
   );
 
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'applications':
+        return <ApplicationsTab />;
+      case 'menus':
+        return (
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            {menusContent}
+            {microAppsContent}
+          </Space>
+        );
+      case 'routes':
+        return (
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            {servicesContent}
+            <RoutePoliciesTab />
+          </Space>
+        );
+      case 'permissions':
+        return (
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <PermissionsTab />
+            <RolesTab />
+          </Space>
+        );
+      case 'attributes':
+        return <AttributesTab />;
+      case 'conditions':
+        return <ConditionsTab />;
+      case 'policies':
+        return <PoliciesTab />;
+      default:
+        return <ApplicationsTab />;
+    }
+  };
+
   return (
-    <Card title="Registry Management">
-      <Tabs
-        items={[
-          { key: 'applications', label: 'Applications', children: <ApplicationsTab /> },
-          { key: 'services', label: 'Services', children: servicesTab },
-          { key: 'menus', label: 'Menus', children: menusTab },
-          { key: 'micro-apps', label: 'Micro Apps', children: microAppsTab },
-          { key: 'permissions', label: 'Permissions', children: <PermissionsTab /> },
-          { key: 'roles', label: 'Roles', children: <RolesTab /> },
-          { key: 'route-policies', label: 'Route Policies', children: <RoutePoliciesTab /> },
-        ]}
-      />
+    <div style={{ padding: 24 }}>
+      <Card title={sectionTitles[activeSection] ?? 'Registry Management'}>{renderContent()}</Card>
 
       <Modal
         title={`Routes for ${selectedServiceName}`}
@@ -505,6 +545,6 @@ export function RegistryAdminPage() {
           </Form.Item>
         </Form>
       </Modal>
-    </Card>
+    </div>
   );
 }

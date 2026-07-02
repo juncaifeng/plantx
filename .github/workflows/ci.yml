@@ -46,6 +46,7 @@ jobs:
             platform/tenant-service/api
             services/order/api
             services/test-service/api
+            demo_app/backend/api
             services/order/internal/infra/sqlc
             platform/registry-service/internal/infra/sqlc
             platform/iam-service/internal/infra/sqlc

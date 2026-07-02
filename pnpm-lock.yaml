@@ -334,6 +334,9 @@ importers:
 
   platform/registry-service/web/registry-admin-ui:
     dependencies:
+      '@ant-design/icons':
+        specifier: ^5.3.0
+        version: 5.6.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@plantx/kit-sdk-api':
         specifier: workspace:*
         version: link:../../../../kit/kit-sdk-api
@@ -355,6 +358,9 @@ importers:
       react-dom:
         specifier: ^18.3.0
         version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.0
+        version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@types/react':
         specifier: ^18.3.0

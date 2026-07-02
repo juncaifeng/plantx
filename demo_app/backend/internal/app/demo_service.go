@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/plantx/demo_app/backend/internal/domain"
 	"github.com/plantx/kit/kit-go/auth"
 	kitctx "github.com/plantx/kit/kit-go/context"
-	"github.com/plantx/demo_app/backend/internal/domain"
 )
 
 // DemoService implements the application use-cases.

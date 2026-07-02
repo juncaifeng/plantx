@@ -19,6 +19,13 @@ export type TranslationKey =
   | 'nav.gateway'
   | 'nav.audit'
   | 'nav.registry'
+  | 'nav.registry.applications'
+  | 'nav.registry.menus'
+  | 'nav.registry.routes'
+  | 'nav.registry.permissions'
+  | 'nav.registry.attributes'
+  | 'nav.registry.conditions'
+  | 'nav.registry.policies'
   | 'nav.apiExplorer'
   | 'header.logout'
   | 'header.language'
@@ -55,6 +62,13 @@ export const resources: Resources = {
     'nav.gateway': '网关',
     'nav.audit': '审计',
     'nav.registry': '注册中心',
+    'nav.registry.applications': '应用管理',
+    'nav.registry.menus': '菜单管理',
+    'nav.registry.routes': '路由管理',
+    'nav.registry.permissions': '权限管理',
+    'nav.registry.attributes': '属性管理',
+    'nav.registry.conditions': '条件管理',
+    'nav.registry.policies': '策略管理',
     'nav.apiExplorer': 'API 浏览器',
     'header.logout': '退出登录',
     'header.language': '语言',
@@ -88,6 +102,13 @@ export const resources: Resources = {
     'nav.gateway': 'Gateway',
     'nav.audit': 'Audit',
     'nav.registry': 'Registry',
+    'nav.registry.applications': 'Applications',
+    'nav.registry.menus': 'Menus',
+    'nav.registry.routes': 'Routes',
+    'nav.registry.permissions': 'Permissions',
+    'nav.registry.attributes': 'Attributes',
+    'nav.registry.conditions': 'Conditions',
+    'nav.registry.policies': 'Policies',
     'nav.apiExplorer': 'API Explorer',
     'header.logout': 'Logout',
     'header.language': 'Language',

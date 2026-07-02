@@ -72,9 +72,11 @@ func main() {
 
 	var authorizer authz.Authorizer
 	opaCfg := env.New("OPA")
+	iamCfg := env.New("IAM")
 	authorizer = authzopa.New(authzopa.Options{
 		URL:          opaCfg.GetString("url"),
 		DecisionPath: opaCfg.GetString("decision_path"),
+		IAMURL:       iamCfg.GetString("url"),
 	})
 
 	srv := server.New(server.Options{
@@ -98,7 +100,77 @@ func main() {
 				Name:              "registry-admin-ui",
 				Route:             "/admin/registry",
 				BundleURL:         "/apps/registry-admin-ui/registry-admin-ui.js",
-				MenuLabelKey:      "nav.registry",
+				MenuLabelKey:      "",
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry",
+				Route:             "/admin/registry",
+				Icon:              "AppstoreOutlined",
+				SortOrder:         10,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.applications",
+				Route:             "/admin/registry/applications",
+				Icon:              "AppstoreOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         10,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.menus",
+				Route:             "/admin/registry/menus",
+				Icon:              "MenuOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         20,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.routes",
+				Route:             "/admin/registry/routes",
+				Icon:              "ToolOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         30,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.permissions",
+				Route:             "/admin/registry/permissions",
+				Icon:              "SafetyOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         40,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.attributes",
+				Route:             "/admin/registry/attributes",
+				Icon:              "TagOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         50,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.conditions",
+				Route:             "/admin/registry/conditions",
+				Icon:              "FilterOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         60,
+				RequirePermission: "registry:read",
+			}),
+			gateway.WithMenu(gateway.Menu{
+				LabelKey:          "nav.registry.policies",
+				Route:             "/admin/registry/policies",
+				Icon:              "FileProtectOutlined",
+				ParentLabelKey:    "nav.registry",
+				MicroAppName:      "registry-admin-ui",
+				SortOrder:         70,
 				RequirePermission: "registry:read",
 			}),
 			gateway.WithMicroApp(gateway.MicroApp{

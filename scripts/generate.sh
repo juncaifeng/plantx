@@ -50,6 +50,19 @@ if [ -d "test-service/api" ]; then
   mv test-service/api/*.pb.go test-service/api/*.pb.gw.go services/test-service/api/ 2>/dev/null || true
 fi
 
+echo "==> Generating demo app proto code"
+protoc \
+  --proto_path=. \
+  --proto_path=proto \
+  --go_out=. \
+  --go_opt=paths=source_relative \
+  --go-grpc_out=. \
+  --go-grpc_opt=paths=source_relative \
+  --grpc-gateway_out=. \
+  --grpc-gateway_opt=paths=source_relative \
+  --grpc-gateway_opt=generate_unbound_methods=true \
+  demo_app/backend/api/demo.proto
+
 echo "==> Generating OpenAPI specs"
 npx buf generate --template buf.openapi.gen.yaml
 
