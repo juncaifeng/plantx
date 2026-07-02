@@ -70,7 +70,7 @@ jobs:
         run: |
           for dir in $(go list -m -f '{{if .Main}}{{.Dir}}{{end}}' all | grep "/home/runner/work/plantx/plantx"); do
             echo "==> linting $dir"
-            (cd "$dir" && golangci-lint run ./...)
+            (cd "$dir" && go build ./... && golangci-lint run ./...)
           done
 
   test-go:
