@@ -46,6 +46,7 @@ jobs:
             platform/tenant-service/api
             services/order/api
             services/test-service/api
+            demo_app/backend/api
             services/order/internal/infra/sqlc
             platform/registry-service/internal/infra/sqlc
             platform/iam-service/internal/infra/sqlc
@@ -70,7 +71,7 @@ jobs:
         run: |
           for dir in $(go list -m -f '{{if .Main}}{{.Dir}}{{end}}' all | grep "/home/runner/work/plantx/plantx"); do
             echo "==> linting $dir"
-            (cd "$dir" && go build ./... && golangci-lint run ./...)
+            (cd "$dir" && golangci-lint run ./...)
           done
 
   test-go:
