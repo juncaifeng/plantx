@@ -64,11 +64,11 @@ type PermissionConfig struct {
 
 // Config is the top-level YAML configuration for gateway registration.
 type Config struct {
-	Service      ServiceConfig       `yaml:"service"`
-	Application  ApplicationConfig   `yaml:"application"`
-	MicroApps    []MicroAppConfig    `yaml:"micro_apps"`
-	Menus        []MenuConfig        `yaml:"menus"`
-	Permissions  []PermissionConfig  `yaml:"permissions"`
+	Service     ServiceConfig      `yaml:"service"`
+	Application ApplicationConfig  `yaml:"application"`
+	MicroApps   []MicroAppConfig   `yaml:"micro_apps"`
+	Menus       []MenuConfig       `yaml:"menus"`
+	Permissions []PermissionConfig `yaml:"permissions"`
 }
 
 var envVarPattern = regexp.MustCompile(`\$\{([^}:]+)(?::-([^}]*))?\}|\$([A-Za-z_][A-Za-z0-9_]*)`)

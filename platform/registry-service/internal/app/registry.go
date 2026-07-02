@@ -10,7 +10,7 @@ import (
 
 // Registry implements registry use cases.
 type Registry struct {
-	repo         domain.Repository
+	repo           domain.Repository
 	temporalClient client.Client
 }
 

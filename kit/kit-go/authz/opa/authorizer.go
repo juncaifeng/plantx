@@ -55,9 +55,9 @@ type decisionResponse struct {
 }
 
 type abacEvaluateRequest struct {
-	Permission          string            `json:"permission"`
-	UserAttributes      map[string]string `json:"user_attributes"`
-	ResourceAttributes  map[string]string `json:"resource_attributes"`
+	Permission         string            `json:"permission"`
+	UserAttributes     map[string]string `json:"user_attributes"`
+	ResourceAttributes map[string]string `json:"resource_attributes"`
 }
 
 type abacEvaluateResponse struct {

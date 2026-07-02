@@ -45,11 +45,11 @@ type Condition struct {
 
 // Policy combines permissions with conditions for ABAC decisions.
 type Policy struct {
-	ID          string
-	Name        string
-	Description string
-	Permissions []string
+	ID           string
+	Name         string
+	Description  string
+	Permissions  []string
 	ConditionIDs []string
-	Effect      string
-	Priority    int32
+	Effect       string
+	Priority     int32
 }

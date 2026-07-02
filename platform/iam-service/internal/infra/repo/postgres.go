@@ -387,7 +387,7 @@ func (r *PostgresRepo) setPolicyRelations(ctx context.Context, policyID uuid.UUI
 			return fmt.Errorf("invalid condition id %q: %w", condID, err)
 		}
 		if err := r.queries.AddPolicyCondition(ctx, sqlc.AddPolicyConditionParams{
-			PolicyID:     policyID,
+			PolicyID:    policyID,
 			ConditionID: cuid,
 		}); err != nil {
 			return fmt.Errorf("add policy condition: %w", err)
