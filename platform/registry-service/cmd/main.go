@@ -72,9 +72,11 @@ func main() {
 
 	var authorizer authz.Authorizer
 	opaCfg := env.New("OPA")
+	iamCfg := env.New("IAM")
 	authorizer = authzopa.New(authzopa.Options{
 		URL:          opaCfg.GetString("url"),
 		DecisionPath: opaCfg.GetString("decision_path"),
+		IAMURL:       iamCfg.GetString("url"),
 	})
 
 	srv := server.New(server.Options{

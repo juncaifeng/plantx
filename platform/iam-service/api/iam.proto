@@ -122,6 +122,62 @@ service IAMService {
       operation: "delete"
     };
   }
+
+  rpc ListAttributes(ListAttributesRequest) returns (ListAttributesResponse) {
+    option (google.api.http) = { get: "/api/iam/v1/attributes" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "attribute" operation: "list" };
+  }
+  rpc CreateAttribute(CreateAttributeRequest) returns (Attribute) {
+    option (google.api.http) = { post: "/api/iam/v1/attributes" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "attribute" operation: "create" };
+  }
+  rpc UpdateAttribute(UpdateAttributeRequest) returns (Attribute) {
+    option (google.api.http) = { put: "/api/iam/v1/attributes/{id}" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "attribute" operation: "update" };
+  }
+  rpc DeleteAttribute(DeleteAttributeRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { delete: "/api/iam/v1/attributes/{id}" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "attribute" operation: "delete" };
+  }
+
+  rpc ListConditions(ListConditionsRequest) returns (ListConditionsResponse) {
+    option (google.api.http) = { get: "/api/iam/v1/conditions" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "condition" operation: "list" };
+  }
+  rpc CreateCondition(CreateConditionRequest) returns (Condition) {
+    option (google.api.http) = { post: "/api/iam/v1/conditions" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "condition" operation: "create" };
+  }
+  rpc UpdateCondition(UpdateConditionRequest) returns (Condition) {
+    option (google.api.http) = { put: "/api/iam/v1/conditions/{id}" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "condition" operation: "update" };
+  }
+  rpc DeleteCondition(DeleteConditionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { delete: "/api/iam/v1/conditions/{id}" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "condition" operation: "delete" };
+  }
+
+  rpc ListPolicies(ListPoliciesRequest) returns (ListPoliciesResponse) {
+    option (google.api.http) = { get: "/api/iam/v1/policies" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "policy" operation: "list" };
+  }
+  rpc CreatePolicy(CreatePolicyRequest) returns (Policy) {
+    option (google.api.http) = { post: "/api/iam/v1/policies" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "policy" operation: "create" };
+  }
+  rpc UpdatePolicy(UpdatePolicyRequest) returns (Policy) {
+    option (google.api.http) = { put: "/api/iam/v1/policies/{id}" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "policy" operation: "update" };
+  }
+  rpc DeletePolicy(DeletePolicyRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = { delete: "/api/iam/v1/policies/{id}" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "policy" operation: "delete" };
+  }
+
+  rpc EvaluatePolicy(EvaluatePolicyRequest) returns (EvaluatePolicyResponse) {
+    option (google.api.http) = { post: "/api/iam/v1/policies/evaluate" body: "*" };
+    option (plantx.kit.authz.action) = { service: "iam" resource: "policy" operation: "read" };
+  }
 }
 
 message User {
@@ -200,4 +256,95 @@ message CreatePermissionRequest {
 
 message DeletePermissionRequest {
   string id = 1;
+}
+
+message Attribute {
+  string id = 1;
+  string key = 2;
+  string value_type = 3;
+  string description = 4;
+}
+
+message Condition {
+  string id = 1;
+  string name = 2;
+  string attribute_key = 3;
+  string operator = 4;
+  string value = 5;
+  string description = 6;
+}
+
+message Policy {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permissions = 4;
+  repeated string condition_ids = 5;
+  string effect = 6;
+  int32 priority = 7;
+}
+
+message ListAttributesRequest {}
+message ListAttributesResponse { repeated Attribute attributes = 1; }
+message CreateAttributeRequest {
+  string key = 1;
+  string value_type = 2;
+  string description = 3;
+}
+message UpdateAttributeRequest {
+  string id = 1;
+  string key = 2;
+  string value_type = 3;
+  string description = 4;
+}
+message DeleteAttributeRequest { string id = 1; }
+
+message ListConditionsRequest {}
+message ListConditionsResponse { repeated Condition conditions = 1; }
+message CreateConditionRequest {
+  string name = 1;
+  string attribute_key = 2;
+  string operator = 3;
+  string value = 4;
+  string description = 5;
+}
+message UpdateConditionRequest {
+  string id = 1;
+  string name = 2;
+  string attribute_key = 3;
+  string operator = 4;
+  string value = 5;
+  string description = 6;
+}
+message DeleteConditionRequest { string id = 1; }
+
+message ListPoliciesRequest {}
+message ListPoliciesResponse { repeated Policy policies = 1; }
+message CreatePolicyRequest {
+  string name = 1;
+  string description = 2;
+  repeated string permissions = 3;
+  repeated string condition_ids = 4;
+  string effect = 5;
+  int32 priority = 6;
+}
+message UpdatePolicyRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permissions = 4;
+  repeated string condition_ids = 5;
+  string effect = 6;
+  int32 priority = 7;
+}
+message DeletePolicyRequest { string id = 1; }
+
+message EvaluatePolicyRequest {
+  string permission = 1;
+  map<string, string> user_attributes = 2;
+  map<string, string> resource_attributes = 3;
+}
+message EvaluatePolicyResponse {
+  bool allowed = 1;
+  string reason = 2;
 }

@@ -14,13 +14,16 @@ import {
   Typography,
   message,
 } from 'antd';
-import { Link, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AppstoreOutlined,
   CloudServerOutlined,
+  FileProtectOutlined,
+  FilterOutlined,
   MenuOutlined,
   MobileOutlined,
   SafetyOutlined,
+  TagOutlined,
   TeamOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
@@ -33,7 +36,10 @@ import {
   type Route,
 } from '@plantx/kit-sdk-api/registry';
 import { ApplicationsTab } from './ApplicationsTab';
+import { AttributesTab } from './AttributesTab';
+import { ConditionsTab } from './ConditionsTab';
 import { PermissionsTab } from './PermissionsTab';
+import { PoliciesTab } from './PoliciesTab';
 import { RolesTab } from './RolesTab';
 import { RoutePoliciesTab } from './RoutePoliciesTab';
 
@@ -46,7 +52,10 @@ type Section =
   | 'micro-apps'
   | 'permissions'
   | 'roles'
-  | 'route-policies';
+  | 'route-policies'
+  | 'attributes'
+  | 'conditions'
+  | 'policies';
 
 const menuItems = [
   { key: 'applications', label: 'Applications', icon: <AppstoreOutlined />, path: '/admin/registry/applications' },
@@ -56,11 +65,15 @@ const menuItems = [
   { key: 'permissions', label: 'Permissions', icon: <SafetyOutlined />, path: '/admin/registry/permissions' },
   { key: 'roles', label: 'Roles', icon: <TeamOutlined />, path: '/admin/registry/roles' },
   { key: 'route-policies', label: 'Route Policies', icon: <ToolOutlined />, path: '/admin/registry/route-policies' },
+  { key: 'attributes', label: 'Attributes', icon: <TagOutlined />, path: '/admin/registry/attributes' },
+  { key: 'conditions', label: 'Conditions', icon: <FilterOutlined />, path: '/admin/registry/conditions' },
+  { key: 'policies', label: 'Policies', icon: <FileProtectOutlined />, path: '/admin/registry/policies' },
 ];
 
 export function RegistryAdminPage() {
   const { section } = useParams<{ section: string }>();
   const activeSection: Section = (section as Section) ?? 'applications';
+  const navigate = useNavigate();
 
   const { apiClient } = useKitContext();
   const registryClient = useMemo(
@@ -425,6 +438,12 @@ export function RegistryAdminPage() {
         return <RolesTab />;
       case 'route-policies':
         return <RoutePoliciesTab />;
+      case 'attributes':
+        return <AttributesTab />;
+      case 'conditions':
+        return <ConditionsTab />;
+      case 'policies':
+        return <PoliciesTab />;
       default:
         return <ApplicationsTab />;
     }
@@ -441,8 +460,14 @@ export function RegistryAdminPage() {
           items={menuItems.map((item) => ({
             key: item.key,
             icon: item.icon,
-            label: <Link to={item.path}>{item.label}</Link>,
+            label: item.label,
           }))}
+          onClick={({ key }) => {
+            const item = menuItems.find((i) => i.key === key);
+            if (item) {
+              navigate(item.path);
+            }
+          }}
         />
       </Sider>
       <Content style={{ padding: 24 }}>

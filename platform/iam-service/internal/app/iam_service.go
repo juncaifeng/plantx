@@ -65,3 +65,63 @@ func (s *IAMService) CreatePermission(ctx context.Context, name, resource, opera
 func (s *IAMService) DeletePermission(ctx context.Context, id string) error {
 	return s.repo.DeletePermission(ctx, id)
 }
+
+// ListAttributes lists all ABAC attributes.
+func (s *IAMService) ListAttributes(ctx context.Context) ([]*domain.Attribute, error) {
+	return s.repo.ListAttributes(ctx)
+}
+
+// CreateAttribute creates a new ABAC attribute.
+func (s *IAMService) CreateAttribute(ctx context.Context, key, valueType, description string) (*domain.Attribute, error) {
+	return s.repo.CreateAttribute(ctx, key, valueType, description)
+}
+
+// UpdateAttribute updates an existing ABAC attribute.
+func (s *IAMService) UpdateAttribute(ctx context.Context, id, key, valueType, description string) (*domain.Attribute, error) {
+	return s.repo.UpdateAttribute(ctx, id, key, valueType, description)
+}
+
+// DeleteAttribute deletes an ABAC attribute by ID.
+func (s *IAMService) DeleteAttribute(ctx context.Context, id string) error {
+	return s.repo.DeleteAttribute(ctx, id)
+}
+
+// ListConditions lists all ABAC conditions.
+func (s *IAMService) ListConditions(ctx context.Context) ([]*domain.Condition, error) {
+	return s.repo.ListConditions(ctx)
+}
+
+// CreateCondition creates a new ABAC condition.
+func (s *IAMService) CreateCondition(ctx context.Context, name, attributeKey, operator, value, description string) (*domain.Condition, error) {
+	return s.repo.CreateCondition(ctx, name, attributeKey, operator, value, description)
+}
+
+// UpdateCondition updates an existing ABAC condition.
+func (s *IAMService) UpdateCondition(ctx context.Context, id, name, attributeKey, operator, value, description string) (*domain.Condition, error) {
+	return s.repo.UpdateCondition(ctx, id, name, attributeKey, operator, value, description)
+}
+
+// DeleteCondition deletes an ABAC condition by ID.
+func (s *IAMService) DeleteCondition(ctx context.Context, id string) error {
+	return s.repo.DeleteCondition(ctx, id)
+}
+
+// ListPolicies lists all ABAC policies.
+func (s *IAMService) ListPolicies(ctx context.Context) ([]*domain.Policy, error) {
+	return s.repo.ListPolicies(ctx)
+}
+
+// CreatePolicy creates a new ABAC policy.
+func (s *IAMService) CreatePolicy(ctx context.Context, name, description, effect string, priority int32, permissions, conditionIDs []string) (*domain.Policy, error) {
+	return s.repo.CreatePolicy(ctx, name, description, effect, priority, permissions, conditionIDs)
+}
+
+// UpdatePolicy updates an existing ABAC policy.
+func (s *IAMService) UpdatePolicy(ctx context.Context, id, name, description, effect string, priority int32, permissions, conditionIDs []string) (*domain.Policy, error) {
+	return s.repo.UpdatePolicy(ctx, id, name, description, effect, priority, permissions, conditionIDs)
+}
+
+// DeletePolicy deletes an ABAC policy by ID.
+func (s *IAMService) DeletePolicy(ctx context.Context, id string) error {
+	return s.repo.DeletePolicy(ctx, id)
+}

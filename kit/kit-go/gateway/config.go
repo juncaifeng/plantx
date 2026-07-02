@@ -48,6 +48,7 @@ type MenuConfig struct {
 	Route             string `yaml:"route"`
 	Icon              string `yaml:"icon"`
 	ParentID          string `yaml:"parent_id"`
+	ParentLabelKey    string `yaml:"parent_label_key"`
 	SortOrder         int32  `yaml:"sort_order"`
 	MicroAppName      string `yaml:"micro_app_name"`
 	RequirePermission string `yaml:"require_permission"`
@@ -123,6 +124,7 @@ func expandConfig(cfg *Config) {
 		cfg.Menus[i].Route = expandEnv(cfg.Menus[i].Route)
 		cfg.Menus[i].Icon = expandEnv(cfg.Menus[i].Icon)
 		cfg.Menus[i].ParentID = expandEnv(cfg.Menus[i].ParentID)
+		cfg.Menus[i].ParentLabelKey = expandEnv(cfg.Menus[i].ParentLabelKey)
 		cfg.Menus[i].MicroAppName = expandEnv(cfg.Menus[i].MicroAppName)
 		cfg.Menus[i].RequirePermission = expandEnv(cfg.Menus[i].RequirePermission)
 	}
@@ -217,6 +219,7 @@ func AutoRegisterFromConfig(path string) (server.GatewayRegistrar, error) {
 			Route:             m.Route,
 			Icon:              m.Icon,
 			ParentID:          m.ParentID,
+			ParentLabelKey:    m.ParentLabelKey,
 			SortOrder:         m.SortOrder,
 			MicroAppName:      m.MicroAppName,
 			RequirePermission: m.RequirePermission,

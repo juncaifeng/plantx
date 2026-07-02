@@ -26,6 +26,7 @@ type Menu struct {
 	Route             string
 	Icon              string
 	ParentID          string
+	ParentLabelKey    string
 	SortOrder         int32
 	MicroAppName      string
 	RequirePermission string
@@ -189,10 +190,21 @@ func (r *registrar) Register(ctx context.Context) error {
 		}
 	}
 
+	menuIDs := make(map[string]string)
 	for _, m := range r.opts.menus {
-		if _, err := client.RegisterMenu(ctx, toPBMenu(m), r.applicationID, r.applicationKey); err != nil {
+		pb := toPBMenu(m)
+		if pb.GetParentId() == "" && m.ParentLabelKey != "" {
+			if parentID, ok := menuIDs[m.ParentLabelKey]; ok {
+				pb.ParentId = parentID
+			}
+		}
+		created, err := client.RegisterMenu(ctx, pb, r.applicationID, r.applicationKey)
+		if err != nil {
 			_ = client.Close()
 			return fmt.Errorf("register menu %s: %w", m.LabelKey, err)
+		}
+		if m.LabelKey != "" {
+			menuIDs[m.LabelKey] = created.GetId()
 		}
 	}
 	return nil

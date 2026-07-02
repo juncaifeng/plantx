@@ -25,11 +25,14 @@ function render(props: QiankunProps) {
     permissions: props.permissions,
     apiClient: props.apiClient,
   };
+  const initialPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin/registry')
+    ? window.location.pathname
+    : '/admin/registry/applications';
   const root = ReactDOM.createRoot(container);
   root.render(
     <ConfigProvider>
       <KitProvider value={context}>
-        <MemoryRouter initialEntries={['/admin/registry/applications']}>
+        <MemoryRouter initialEntries={[initialPath]}>
           <AntLayout style={{ minHeight: '100%' }}>
             <Header style={{ display: 'flex', alignItems: 'center' }}>
               <Typography.Title level={5} style={{ color: '#fff', margin: 0 }}>
